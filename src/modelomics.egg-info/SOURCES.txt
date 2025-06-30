@@ -1,0 +1,9 @@
+README.md
+pyproject.toml
+src/modelomics/__init__.py
+src/modelomics/sequences.py
+src/modelomics.egg-info/PKG-INFO
+src/modelomics.egg-info/SOURCES.txt
+src/modelomics.egg-info/dependency_links.txt
+src/modelomics.egg-info/top_level.txt
+tests/test_embeddings.py
