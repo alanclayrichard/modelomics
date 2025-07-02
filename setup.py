@@ -11,7 +11,11 @@ setup(
     package_dir={"": "src"},
     python_requires=">=3.10",
     install_requires=[
-        "esm>=3.2.0",
-        "biopython>=1.85",
+    "numpy",
+    "torch",
+    "torch-geometric",
+    "scipy",
+    "biopython>=1.85",
+    "esm>=3.2.0",
     ],
 )

@@ -4,9 +4,11 @@
 
 ## Current Features
 
+- Easy integration with Biopython's PDB parsing utilities.
 - Extract sequences from CIF structure files.
 - Generate sequence embeddings using ESM models.
-- Easy integration with Biopython's PDB parsing utilities.
+- Generate graph representations of protein structures using PyTorch Geometric.
+
 
 ## Installation
 

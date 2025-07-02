@@ -27,20 +27,10 @@ def sequence_from_cif(file_path, chain='A'):
 
 def embed_sequence(seq):
     # Define the protein sequence
-    protein = ESMProtein(
-        sequence=(seq)
-    )
+    protein = ESMProtein(sequence=(seq))
 
     # Encode the protein into ESMProteinTensor
     protein_tensor = client.encode(protein)
-
-    # Mask the first residue
-    sequence_tokens = protein_tensor.sequence
-    mask_token_id = client.tokenizer.mask_token_id  
-    sequence_tokens[0] = mask_token_id 
-
-    # Update the protein tensor with the masked sequence
-    protein_tensor.sequence = sequence_tokens
 
     # Get logits and embeddings
     logits_output = client.logits(
@@ -50,4 +40,32 @@ def embed_sequence(seq):
     # Extract the embeddings tensor
     embeddings = logits_output.embeddings
 
+    return embeddings
+
+def embed_sequence_with_mask(seq, mask_positions):
+    # define the sequence
+    protein = ESMProtein(sequence=seq)
+    # encode the protein sequence
+    protein_tensor = client.encode(protein)
+
+    # clone to avoid in-place edits
+    sequence_tokens = protein_tensor.sequence.clone()  
+    mask_token_id = client.tokenizer.mask_token_id
+
+    for pos in mask_positions:
+        if pos < 0 or pos >= len(sequence_tokens):
+            raise IndexError(f"mask position {pos} is out of sequence bounds")
+        # replace the sequence token with the mask token at pos
+        sequence_tokens[pos] = mask_token_id
+
+    # replace the encoded sequence with the masked sequence
+    protein_tensor.sequence = sequence_tokens
+
+    # look up the embeddings from the model
+    logits_output = client.logits(
+        protein_tensor, LogitsConfig(sequence=True, return_embeddings=True)
+    )
+    embeddings = logits_output.embeddings
+
+    # return embeddings tensor
     return embeddings
