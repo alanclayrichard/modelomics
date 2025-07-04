@@ -2,8 +2,14 @@ from esm.models.esmc import ESMC
 from esm.sdk.api import ESMProtein, LogitsConfig
 from Bio.PDB import MMCIFParser, Polypeptide
 
-# Load the pretrained ESMC model
-client = ESMC.from_pretrained("esmc_300m").to("cpu")
+# Load the pretrained ESMC model when called
+_client = None 
+
+def get_client():
+    global _client
+    if _client is None:
+        _client = ESMC.from_pretrained("esmc_300m").to("cpu")
+    return _client
 
 def sequence_from_cif(file_path, chain='A'):
     parser = MMCIFParser(QUIET=True)
@@ -26,6 +32,7 @@ def sequence_from_cif(file_path, chain='A'):
     return str(sequence)
 
 def embed_sequence(seq):
+    client = get_client()
     # Define the protein sequence
     protein = ESMProtein(sequence=(seq))
 
@@ -43,6 +50,7 @@ def embed_sequence(seq):
     return embeddings
 
 def embed_sequence_with_mask(seq, mask_positions):
+    client = get_client()
     # define the sequence
     protein = ESMProtein(sequence=seq)
     # encode the protein sequence
