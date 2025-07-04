@@ -1,4 +1,20 @@
 Metadata-Version: 2.4
 Name: modelomics
 Version: 0.0.0b0
-Summary: Different Models for Various Protein Design Tasks
+Summary: Tools and models for protein design all in one place
+Home-page: https://github.com/alanclayrichard/modelomics
+Author: A. Clay Richard
+Author-email: alanclayrichard@gmail.com
+Requires-Python: >=3.10
+Requires-Dist: numpy
+Requires-Dist: torch
+Requires-Dist: torch-geometric
+Requires-Dist: scipy
+Requires-Dist: biopython>=1.85
+Requires-Dist: esm>=3.2.0
+Dynamic: author
+Dynamic: author-email
+Dynamic: home-page
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary

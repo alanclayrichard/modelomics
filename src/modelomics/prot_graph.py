@@ -1,7 +1,7 @@
+# created by clay 07/01/25
 import numpy as np
 from scipy.spatial import KDTree
 import os
-
 
 # Atomic radii lookup (values from a ucsf chimera page)
 AtomicRadii = {

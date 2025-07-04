@@ -1,0 +1,6 @@
+numpy
+torch
+torch-geometric
+scipy
+biopython>=1.85
+esm>=3.2.0
