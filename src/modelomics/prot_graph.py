@@ -1,9 +1,7 @@
 import numpy as np
-import torch
-from torch_geometric.data import Data
 from scipy.spatial import KDTree
 import os
-from Bio.PDB import PDBParser, MMCIFParser
+
 
 # Atomic radii lookup (values from a ucsf chimera page)
 AtomicRadii = {
@@ -57,12 +55,14 @@ def parse_structure(structure, chain_id=None):
 
 # a function to load a pdb file into a biopython structure then parse
 def parse_pdb(pdb_file, chain_id=None):
+    from Bio.PDB import PDBParser
     parser = PDBParser(QUIET=True)
     structure = parser.get_structure("pdb_struct", pdb_file)
     return parse_structure(structure, chain_id)
 
 # a function to load a cif file into a biopython structure then parse
 def parse_cif(cif_file, chain_id=None):
+    from Bio.PDB import MMCIFParser
     parser = MMCIFParser(QUIET=True)
     structure = parser.get_structure("cif_struct", cif_file)
     return parse_structure(structure, chain_id)
@@ -95,13 +95,21 @@ def build_edges(positions, cutoff=15.0):
     return edges
 
 def structure_to_pyg(file_path, chain=None, cutoff=15.0):
+    import torch
+    from torch_geometric.data import Data
     ext = os.path.splitext(file_path)[-1].lower()
 
     # parse the file according to its type (pdb and cif supported)
     if ext == ".pdb":
-        pos_np, serials_np, radii_np, elements, residues = parse_pdb(file_path, chain_id=chain)
+        pos_np, serials_np, radii_np, elements, residues = parse_pdb(
+            file_path, 
+            chain_id=chain
+        )
     elif ext == ".cif":
-        pos_np, serials_np, radii_np, elements, residues = parse_cif(file_path, chain_id=chain)
+        pos_np, serials_np, radii_np, elements, residues = parse_cif(
+            file_path, 
+            chain_id=chain
+        )
     else:
         raise ValueError("Unsupported file format: must be .pdb or .cif")
 

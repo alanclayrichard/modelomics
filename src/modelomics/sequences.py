@@ -1,17 +1,17 @@
-from esm.models.esmc import ESMC
-from esm.sdk.api import ESMProtein, LogitsConfig
-from Bio.PDB import MMCIFParser, Polypeptide
+# created by clay 07/01/25
 
-# Load the pretrained ESMC model when called
+# Load the pretrained ESMC model when called (lazy imports for speed)
 _client = None 
 
 def get_client():
+    from esm.models.esmc import ESMC
     global _client
     if _client is None:
         _client = ESMC.from_pretrained("esmc_300m").to("cpu")
     return _client
 
 def sequence_from_cif(file_path, chain='A'):
+    from Bio.PDB import MMCIFParser, Polypeptide
     parser = MMCIFParser(QUIET=True)
     structure = parser.get_structure("structure", file_path)
 
@@ -31,7 +31,30 @@ def sequence_from_cif(file_path, chain='A'):
     
     return str(sequence)
 
+def sequence_from_pdb(file_path, chain='A'):
+    from Bio.PDB import PDBParser, Polypeptide
+    parser = PDBParser(QUIET=True)
+    structure = parser.get_structure("structure", file_path)
+
+    # Get the model (first model)
+    model = structure[0]
+
+    # Get the specified chain
+    if chain not in model:
+        raise ValueError(f"Chain {chain} not found in the structure.")
+    chain = model[chain]
+
+    # Extract polypeptide
+    ppb = Polypeptide.PPBuilder()
+    sequence = ""
+    for pp in ppb.build_peptides(chain):
+        sequence += pp.get_sequence()
+    
+    return str(sequence)
+
+
 def embed_sequence(seq):
+    from esm.sdk.api import ESMProtein, LogitsConfig
     client = get_client()
     # Define the protein sequence
     protein = ESMProtein(sequence=(seq))
@@ -50,6 +73,7 @@ def embed_sequence(seq):
     return embeddings
 
 def embed_sequence_with_mask(seq, mask_positions):
+    from esm.sdk.api import ESMProtein, LogitsConfig
     client = get_client()
     # define the sequence
     protein = ESMProtein(sequence=seq)
