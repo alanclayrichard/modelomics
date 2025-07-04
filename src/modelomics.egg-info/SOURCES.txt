@@ -1,5 +1,6 @@
 README.md
 pyproject.toml
+setup.cfg
 setup.py
 src/modelomics/__init__.py
 src/modelomics/prot_graph.py

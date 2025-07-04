@@ -12,9 +12,3 @@ Requires-Dist: torch-geometric
 Requires-Dist: scipy
 Requires-Dist: biopython>=1.85
 Requires-Dist: esm>=3.2.0
-Dynamic: author
-Dynamic: author-email
-Dynamic: home-page
-Dynamic: requires-dist
-Dynamic: requires-python
-Dynamic: summary
