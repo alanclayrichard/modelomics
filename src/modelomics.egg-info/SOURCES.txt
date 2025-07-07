@@ -3,7 +3,9 @@ pyproject.toml
 setup.cfg
 setup.py
 src/modelomics/__init__.py
-src/modelomics/prot_graph.py
+src/modelomics/atom_graph.py
+src/modelomics/protein_graph.py
+src/modelomics/residue_graph.py
 src/modelomics/sequences.py
 src/modelomics.egg-info/PKG-INFO
 src/modelomics.egg-info/SOURCES.txt
