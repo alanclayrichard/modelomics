@@ -53,7 +53,8 @@ class ResidueGraphBuilder(BaseProteinGraphBuilder):
                         "ca_coords": ca_coord,
                         "atom_coords": np.array(atom_coords),
                         "atom_elements": atom_elements,
-                        "atom_radii": atom_radii
+                        "atom_radii": atom_radii,
+                        "chain": chain.id
                     })
 
         return residues
