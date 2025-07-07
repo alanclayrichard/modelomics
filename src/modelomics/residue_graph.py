@@ -94,7 +94,8 @@ class ResidueGraphBuilder(BaseProteinGraphBuilder):
                 "resname": r["resname"],
                 "atom_coords": torch.tensor(r["atom_coords"], dtype=torch.float),
                 "atom_elements": r["atom_elements"],
-                "atom_radii": torch.tensor(r["atom_radii"], dtype=torch.float)
+                "atom_radii": torch.tensor(r["atom_radii"], dtype=torch.float),
+                "chain": r["chain"]
             })
 
         # build PyG Data object with x and pos set
