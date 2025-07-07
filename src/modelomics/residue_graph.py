@@ -31,6 +31,7 @@ class ResidueGraphBuilder(BaseProteinGraphBuilder):
                     atom_coords = []
                     atom_elements = []
                     atom_radii = []
+                    atom_names = []
                     ca_coord = None
 
                     for atom in residue:
@@ -44,6 +45,7 @@ class ResidueGraphBuilder(BaseProteinGraphBuilder):
                         atom_coords.append(coord)
                         atom_elements.append(element)
                         atom_radii.append(radius)
+                        atom_names.append(atom.get_id())
 
                     if len(atom_coords) == 0:
                         continue
@@ -54,6 +56,7 @@ class ResidueGraphBuilder(BaseProteinGraphBuilder):
                         "atom_coords": np.array(atom_coords),
                         "atom_elements": atom_elements,
                         "atom_radii": atom_radii,
+                        "atom_names": atom_names,
                         "chain": chain.id
                     })
 
@@ -95,6 +98,7 @@ class ResidueGraphBuilder(BaseProteinGraphBuilder):
                 "atom_coords": torch.tensor(r["atom_coords"], dtype=torch.float),
                 "atom_elements": r["atom_elements"],
                 "atom_radii": torch.tensor(r["atom_radii"], dtype=torch.float),
+                "atom_names": r["atom_names"],
                 "chain": r["chain"]
             })
 
