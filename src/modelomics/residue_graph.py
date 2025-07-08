@@ -52,6 +52,7 @@ class ResidueGraphBuilder(BaseProteinGraphBuilder):
 
                     residues.append({
                         "resname": residue.get_resname(),
+                        "resnum": residue.get_id()[1],
                         "ca_coords": ca_coord,
                         "atom_coords": np.array(atom_coords),
                         "atom_elements": atom_elements,
@@ -95,6 +96,7 @@ class ResidueGraphBuilder(BaseProteinGraphBuilder):
         for r in residues:
             node_features.append({
                 "resname": r["resname"],
+                "resnum": r["resnum"],
                 "atom_coords": torch.tensor(r["atom_coords"], dtype=torch.float),
                 "atom_elements": r["atom_elements"],
                 "atom_radii": torch.tensor(r["atom_radii"], dtype=torch.float),
