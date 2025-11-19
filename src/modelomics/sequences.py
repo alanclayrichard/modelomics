@@ -52,7 +52,6 @@ def sequence_from_pdb(file_path, chain='A'):
     
     return str(sequence)
 
-
 def embed_sequence(seq):
     from esm.sdk.api import ESMProtein, LogitsConfig
     client = get_client()

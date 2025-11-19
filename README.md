@@ -4,8 +4,6 @@
 
 ## Current Features
 
-- Easy integration with Biopython's PDB parsing utilities.
-- Extract sequences from CIF structure files.
 - Generate sequence embeddings using ESM models.
 - Generate graph representations of protein structures using PyTorch Geometric.
 
@@ -29,20 +27,7 @@ This package provides tools for building protein graphs from PDB/CIF files and e
 ### Build Atom- or Residue-Level Graphs
 
 ```python
-from modelomics.atom_graph import AtomGraphBuilder
-from modelomics.residue_graph import ResidueGraphBuilder
-
-# Build atom-level graph from a PDB file
-atom_builder = AtomGraphBuilder()
-atom_graph = atom_builder.build("pdbs/3ux9.pdb")
-
-# Build residue-level graph from the same structure
-residue_builder = ResidueGraphBuilder()
-residue_graph = residue_builder.build("pdbs/3ux9.cif")
-
-# Access node and edge info
-print("Atom graph nodes:", atom_graph.x.shape)
-print("Residue graph edges:", residue_graph.edge_index.shape)
+tbd
 ```
 ### Extract and Embed Sequences
 ```python
