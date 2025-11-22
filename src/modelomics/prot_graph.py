@@ -1,79 +1,22 @@
 # created by clay 07/01/25
+'''
+create a graph representation of a protein via the modelomics.PDB object
+'''
 import numpy as np
 from scipy.spatial import KDTree
-import os
-from PDB import PDB
 
-# Atomic radii lookup (values from a ucsf chimera page)
-# https://rbvi.ucsf.edu/chimerax/docs/user/radii.html#allatom
-AtomicRadii = {
-    "H": 1.0, "C": 1.7, "N": 1.625, "O": 1.48, "S": 1.782, 
-    "AS": 0.58, "CA": 1.00, "CL": 1.81, "FE": 0.61, "MG": 0.72,   
-    "MN": 0.83, "NA": 1.02, "NI": 0.69,  "K": 1.38, "P": 1.871,
-    "SE": 1.82, "ZN": 0.74, "X": 0.00
-}
+from utils.vdw_radii import vdwRadii
 
 # properties of the atom to encode to numerical variables
 element_to_id = {}
 residue_to_id = {}
 
-# # function to turn a structure into features for the graph
-# def parse_structure(structure, chain_id=None):
-#     """Parse atoms from a Biopython structure object."""
-#     positions = []
-#     serials = []
-#     radii = []
-#     elements = []
-#     residues = []
-
-#     # iterate through the Biopython models
-#     for model in structure:
-#         # iterate through the chains in the model
-#         for chain in model:
-#             if chain_id and chain.id != chain_id:
-#                 continue
-#             for residue in chain:
-#                 resname = residue.get_resname()
-#                 for atom in residue:
-#                     # get the coordinates of this atom
-#                     coord = atom.coord
-#                     # the serial number from this atom
-#                     serial = atom.serial_number
-#                     # the element from this atom's name
-#                     element = atom.element.strip().capitalize()
-#                     # append the data to the lists
-#                     # Store features
-#                     positions.append(coord)
-#                     serials.append(serial)
-#                     radii.append(AtomicRadii.get(element, 0.0))
-#                     elements.append(element)
-#                     residues.append(resname)
-
-#     # return the features 
-#     return (
-#         np.array(positions),
-#         np.array(serials),
-#         np.array(radii),
-#         elements,
-#         residues
-#     )
-
-# # a function to load a pdb file into a biopython structure then parse
-# def parse_pdb(pdb_file, chain_id=None):
-#     from Bio.PDB import PDBParser
-#     parser = PDBParser(QUIET=True)
-#     structure = parser.get_structure("pdb_struct", pdb_file)
-#     return parse_structure(structure, chain_id)
-
-# # a function to load a cif file into a biopython structure then parse
-# def parse_cif(cif_file, chain_id=None):
-#     from Bio.PDB import MMCIFParser
-#     parser = MMCIFParser(QUIET=True)
-#     structure = parser.get_structure("cif_struct", cif_file)
-#     return parse_structure(structure, chain_id)
-
 # a function to encode categorical variables into integers
 def encode_categories(items, existing_dict=None):
+    '''
+    take a group of items (like atom names or residue names) and
+    tokenize them
+    '''
     # create a new dictionary if none provided
     if existing_dict is None:
         existing_dict = {}
@@ -90,7 +33,9 @@ def encode_categories(items, existing_dict=None):
 
 # function to turn a structure into features for the graph
 def parse_pdb(pdb, ca_only=False, chains = False):
-    """Parse atoms from a PDB structure object."""
+    """
+    parse atoms from a PDB structure object.
+    """
     positions = []
     numbers = []
     radii = []
@@ -104,7 +49,7 @@ def parse_pdb(pdb, ca_only=False, chains = False):
                 if atom.name == "CA" and atom.chain in chains:
                     positions.append(np.array([atom.x, atom.y, atom.z]))
                     numbers.append(atom.number)
-                    radii.append(AtomicRadii[atom.element])
+                    radii.append(vdwRadii[atom.element])
                     elements.append(atom.element)
                     residues.append(atom.residue)
                     resnums.append(atom.resnum)
@@ -113,7 +58,7 @@ def parse_pdb(pdb, ca_only=False, chains = False):
                 if atom.name == "CA":
                     positions.append(np.array([atom.x, atom.y, atom.z]))
                     numbers.append(atom.number)
-                    radii.append(AtomicRadii[atom.element])
+                    radii.append(vdwRadii[atom.element])
                     elements.append(atom.element)
                     residues.append(atom.residue)
                     resnums.append(atom.resnum)
@@ -123,7 +68,7 @@ def parse_pdb(pdb, ca_only=False, chains = False):
                 if atom.chain in chains:
                     positions.append(np.array([atom.x, atom.y, atom.z]))
                     numbers.append(atom.number)
-                    radii.append(AtomicRadii[atom.element])
+                    radii.append(vdwRadii[atom.element])
                     elements.append(atom.element)
                     residues.append(atom.residue)
                     resnums.append(atom.resnum)
@@ -131,7 +76,7 @@ def parse_pdb(pdb, ca_only=False, chains = False):
             for i, atom in enumerate(pdb.atoms):
                 positions.append(np.array([atom.x, atom.y, atom.z]))
                 numbers.append(atom.number)
-                radii.append(AtomicRadii[atom.element])
+                radii.append(vdwRadii[atom.element])
                 elements.append(atom.element)
                 residues.append(atom.residue)
                 resnums.append(atom.resnum)
@@ -149,6 +94,8 @@ def parse_pdb(pdb, ca_only=False, chains = False):
 # a function to construct the edges of the graph using a kdtree for efficent
 # neighbor searching
 def build_edges(positions, cutoff=15.0):
+    ''' 
+    build the kdtree from the locations of the atoms'''
     # construct the kdtree based on the coordinates of the atoms
     tree = KDTree(positions)
     # get neighbors from some cutoff radius (all pairs with distance < r)
@@ -157,49 +104,30 @@ def build_edges(positions, cutoff=15.0):
     edges = np.vstack([pairs, pairs[:, [1, 0]]]).T
     return edges
 
-def structure_to_pyg(file_path, ca_only=False, chains = None, cutoff=15.0):
+def pdb_to_pyg(pdb, ca_only=False, chains = None, cutoff=15.0):
+    '''
+    create a torch geometric graph representation from a modelomics.PDB object
+    '''
     import torch
     from torch_geometric.data import Data
-    ext = os.path.splitext(file_path)[-1].lower()
 
-    # # parse the file according to its type (pdb and cif supported)
-    # if ext == ".pdb":
-    #     pos_np, serials_np, radii_np, elements, residues = parse_pdb(
-    #         file_path, 
-    #         chain_id=chain
-    #     )
-    # elif ext == ".cif":
-    #     pos_np, serials_np, radii_np, elements, residues = parse_cif(
-    #         file_path, 
-    #         chain_id=chain
-    #     )
-    # else:
-    #     raise ValueError("Unsupported file format: must be .pdb or .cif")
-
-    pdb = PDB(file_path)
-    pos_np, numbers, radii, elements, residues, resnums = parse_pdb(pdb, ca_only, chains)
+    pos_np, numbers, radii, elements, residues, resnums = parse_pdb(pdb, 
+                                                                    ca_only, 
+                                                                    chains)
 
     # encode categorical features to integers
     global element_to_id, residue_to_id
     element_ids, element_to_id = encode_categories(elements, element_to_id)
     residue_ids, residue_to_id = encode_categories(residues, residue_to_id)
 
-    # # turn the features into a matrix for torch graph (4 features per atom)
-    # features_np = np.stack([
-    #     serials_np,
-    #     radii_np,
-    #     element_ids,
-    #     residue_ids
-    # ], axis=1)  # shape: [num_atoms, 4]
-
-    # turn the features into a matrix for torch graph (4 features per atom)
+    # turn the features into a matrix for torch graph
     features_np = np.stack([
         numbers,
         radii,
         element_ids,
         residue_ids, 
         resnums
-    ], axis=1)  # shape: [num_atoms, 4]
+    ], axis=1)
 
     # construct the feature matrix and position matrix
     x = torch.tensor(features_np, dtype=torch.float)
