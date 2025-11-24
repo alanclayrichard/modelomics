@@ -3,7 +3,7 @@
 the chain class for use in protein tasks. a chain is a unique molecule
 '''
 
-import residue as r
+from . import residue as r
 
 class Chain:
     def __init__(self, atoms):

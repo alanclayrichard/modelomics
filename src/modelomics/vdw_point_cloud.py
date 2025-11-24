@@ -7,7 +7,7 @@ with buried point removal using KDTree neighbor search.
 import numpy as np
 from scipy.spatial import KDTree
 
-from utils.atom_colors import atom_colors
+from .utils.atom_colors import atom_colors
 
 class vdwPointCloud:
     def __init__(self, atoms, N=92, probe_radius=1.4):

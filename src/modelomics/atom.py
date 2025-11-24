@@ -3,7 +3,7 @@
 the atom class to be used in various protein tasks
 '''
 
-from utils.vdw_radii import vdwRadii
+from .utils.vdw_radii import vdwRadii
 
 # polar elements for faster lookups
 _POLAR_ELEMENTS = {"N", "O", "F", "S", "CL"}

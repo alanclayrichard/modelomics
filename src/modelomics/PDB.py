@@ -2,8 +2,8 @@
 '''
 the PDB class for use with protein tools
 '''
-import atom as a
-import chain as c
+from . import atom as a
+from . import chain as c
 
 class PDB:
     def __init__(self, filename):
