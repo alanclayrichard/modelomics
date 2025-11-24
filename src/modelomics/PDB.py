@@ -19,7 +19,7 @@ class PDB:
         self.parse_lines(filename)
         
     def __str__(self):
-        return f"PDB object from{self.filename} with {len(self.chains)} chains"
+        return f"PDB object from {self.filename} with {len(self.chains)} chains"
     
     def __getitem__(self, key):
         '''

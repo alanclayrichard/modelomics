@@ -31,3 +31,6 @@ class Residue:
             return self.atoms[key]
         else:
             raise TypeError(f"Invalid Residue key type: {type(key)}")
+        
+    def __len__(self):
+        return len(self.atoms)
