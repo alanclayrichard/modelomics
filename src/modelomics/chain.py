@@ -4,23 +4,24 @@ the chain class for use in protein tasks. a chain is a unique molecule
 '''
 
 from . import residue as r
+from .utils.aa_names import aa_3to1
 
 class Chain:
-    def __init__(self, atoms):
+    def __init__(self, atoms, missing_residues=None):
         ''' 
-        initialize the chain object from a list of atoms
+        initialize the chain object from a list of atoms and missing residues
         '''
-        self.name = atoms[0].chain
+        self.name = atoms[0].chain if atoms else 'X'
         self.atoms = atoms
         self.residues = {}
+        self.missing_residues = missing_residues or []
         self.populate()
         self._residue_list = list(self.residues.values())
 
     def populate(self):
         """
-        efficiently group atoms into residues
+        efficiently group atoms into residues and add missing residues
         """
-            
         resnum = None
         resname = None
         insertion = None
@@ -46,12 +47,31 @@ class Chain:
             
             atoms.append(atom)
         
-        # add the last residue
+        # add the last residue from atoms
         if atoms:
             self.residues[(resname, resnum, insertion)] = r.Residue(atoms)
+        
+        # now add missing residues as empty residues
+        for missing in self.missing_residues:
+            res_name = missing[0]
+            res_num = missing[1]
+            insertion = ""
+            
+            key = (res_name, res_num, insertion)
+            if key not in self.residues:
+                self.residues[key] = r.Residue([], missing_info={
+                    'name': res_name,
+                    'number': res_num,
+                    'chain': self.name,
+                    'insertion': insertion
+                })
 
     def __str__(self):
-        return (f"Chain {self.name} with {len(self.residues)} residues "
+        total_residues = len(self.residues)
+        missing_count = len(self.missing_residues)
+        present_count = total_residues - missing_count
+        return (f"Chain {self.name} with {total_residues} residues "
+                f"({present_count} present, {missing_count} missing) "
                 f"and {len(self.atoms)} atoms")
     
     def __getitem__(self, key):
@@ -69,3 +89,11 @@ class Chain:
             return self._residue_list[key]
         else:
             raise TypeError(f"Invalid key type: {type(key)}")
+        
+    @property
+    def sequence(self):
+        """Return full sequence including missing residues, ordered by residue number"""
+        # sort residues by number to get proper sequence order
+        sorted_residues = sorted(self.residues.items(), key=lambda x: x[0][1])  # Sort by residue number
+        return "".join(aa_3to1.get(res_info[0], "X") for res_info, res_obj in sorted_residues)
+

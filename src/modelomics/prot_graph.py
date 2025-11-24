@@ -5,7 +5,7 @@ create a graph representation of a protein via the modelomics.PDB object
 import numpy as np
 from scipy.spatial import KDTree
 
-from .utils.vdw_radii import vdwRadii
+from .utils.topology import vdwRadii
 
 # properties of the atom to encode to numerical variables
 element_to_id = {}

@@ -85,6 +85,125 @@ class vdwPointCloud:
             # keep only non-buried points
             self.points[i] = points[~buried]
 
+    def get_atom_sasa(self, atom_idx):
+        """
+        calculate SASA for a specific atom based on exposed points
+        """
+        if atom_idx >= len(self.points):
+            return 0.0
+        
+        atom = self.atoms[atom_idx]
+        exposed_points = len(self.points[atom_idx])
+        total_points = self.N
+        
+        # calculate surface area of the atom's vdw sphere
+        R_eff = atom.radius + self.probe_radius
+        total_surface_area = 4 * np.pi * R_eff**2
+        
+        # fraction exposed * total surface area
+        return (exposed_points / total_points) * total_surface_area
+
+    def get_residue_sasa(self, residue):
+        """
+        calculate total SASA for a residue by summing its atoms
+        """
+        total_sasa = 0.0
+        for atom in residue._atom_list:
+            # find this atom in our atom list
+            for i, cloud_atom in enumerate(self.atoms):
+                if (atom.x == cloud_atom.x and 
+                    atom.y == cloud_atom.y and 
+                    atom.z == cloud_atom.z):
+                    total_sasa += self.get_atom_sasa(i)
+                    break
+        return total_sasa
+
+    def sasa_by_type(self):
+        """
+        calculate total and typed SASA for entire protein based on atom polarity
+        """
+        polar_sasa = 0.0
+        nonpolar_sasa = 0.0
+        positive_sasa = 0.0
+        negative_sasa = 0.0
+        total_sasa = 0.0
+
+        for i, atom in enumerate(self.atoms):
+            atom_sasa = self.get_atom_sasa(i)
+            total_sasa += atom_sasa
+
+            # classify by atom polarity (from atom.py)
+            if atom.polar:
+                polar_sasa += atom_sasa
+            else:
+                nonpolar_sasa += atom_sasa
+                
+            # classify by formal charge
+            if hasattr(atom, 'charge'):
+                if atom.charge > 0:
+                    positive_sasa += atom_sasa
+                elif atom.charge < 0:
+                    negative_sasa += atom_sasa
+
+        return {
+            'total': total_sasa,
+            'polar': polar_sasa,
+            'nonpolar': nonpolar_sasa,
+            'positive': positive_sasa,
+            'negative': negative_sasa
+        }
+
+    def residue_sasa_by_type(self, residues):
+        """
+        calculate SASA by atom type for specific binding site residues
+        """
+        polar_sasa = 0.0
+        nonpolar_sasa = 0.0
+        positive_sasa = 0.0
+        negative_sasa = 0.0
+        total_sasa = 0.0
+
+        for res in residues:
+            try:
+                if hasattr(res, 'is_missing') and res.is_missing:
+                    continue
+                    
+                # calculate SASA for each atom in the residue
+                for atom in res._atom_list:
+                    # find this atom in our atom list
+                    for i, cloud_atom in enumerate(self.atoms):
+                        if (atom.x == cloud_atom.x and 
+                            atom.y == cloud_atom.y and 
+                            atom.z == cloud_atom.z):
+                            
+                            atom_sasa = self.get_atom_sasa(i)
+                            total_sasa += atom_sasa
+                            
+                            # classify by atom polarity
+                            if atom.polar:
+                                polar_sasa += atom_sasa
+                            else:
+                                nonpolar_sasa += atom_sasa
+                                
+                            # classify by formal charge
+                            if hasattr(atom, 'charge'):
+                                if atom.charge > 0:
+                                    positive_sasa += atom_sasa
+                                elif atom.charge < 0:
+                                    negative_sasa += atom_sasa
+                            break
+                            
+            except KeyError:
+                continue
+
+        return {
+            'total': total_sasa,
+            'polar': polar_sasa,
+            'nonpolar': nonpolar_sasa,
+            'positive': positive_sasa,
+            'negative': negative_sasa
+        }
+
     def write_points(self, xyz_file):
         """
         write points to an xyz file for visualization

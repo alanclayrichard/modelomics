@@ -1,7 +1,8 @@
 # created by clay 11/22/25
 '''
 standard van der Waals radii for atoms commonly seen in protein systems. these
-values are taken from the qfit3 repo 
+values are taken from the qfit3 repo and then typical definitions for charged
+atoms etc are used
 '''
 
 vdwRadii = {
@@ -123,3 +124,22 @@ vdwRadii = {
     "D": 1.3,
     "AN": 1.5,
 }
+
+# polar elements for faster lookups
+_POLAR_ELEMENTS = {"N", "O", "F", "S", "CL"}
+
+# charged atom definitions by residue and atom name
+_POSITIVE_ATOMS = {
+    "ARG": {"NH1", "NH2", "NE"},  # guanidinium group
+    "LYS": {"NZ"},                # amino group
+    "HIS": {"ND1", "NE2"},        # imidazole (context dependent)
+}
+
+_NEGATIVE_ATOMS = {
+    "ASP": {"OD1", "OD2"},        # carboxylate
+    "GLU": {"OE1", "OE2"},        # carboxylate
+}
+
+# n-terminus and c-terminus charges
+_NTERM_POSITIVE = {"N"}           # n-terminal amino group
+_CTERM_NEGATIVE = {"O", "OXT"}    # c-terminal carboxyl group

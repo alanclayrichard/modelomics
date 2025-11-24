@@ -4,7 +4,7 @@ atom rgb colors for use in various visualization
 '''
 import random
 
-from .vdw_radii import vdwRadii
+from .topology import vdwRadii
 
 CPK_colors = {
     "H":  (1.0, 1.0, 1.0),      # white
