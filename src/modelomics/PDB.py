@@ -83,25 +83,18 @@ class PDB:
         build chains efficiently in one pass
         """
         self.chains = {}
-        current_chain_id = None
-        current_atoms = []
+        chain_atoms = {}
         
+        # group all atoms by chain id first
         for atom in self.atoms:
-            if atom.chain != current_chain_id:
-                # save previous chain
-                if current_atoms:
-                    missing = self.missing_residues.get(current_chain_id, [])
-                    self.chains[current_chain_id] = c.Chain(current_atoms, 
-                                                            missing)
-                # start new chain
-                current_chain_id = atom.chain
-                current_atoms = []
-            current_atoms.append(atom)
-        
-        # add last chain
-        if current_atoms:
-            missing = self.missing_residues.get(current_chain_id, [])
-            self.chains[current_chain_id] = c.Chain(current_atoms, missing)
+            if atom.chain not in chain_atoms:
+                chain_atoms[atom.chain] = []
+            chain_atoms[atom.chain].append(atom)
+            
+        # create chain objects
+        for chain_id, atoms in chain_atoms.items():
+            missing = self.missing_residues.get(chain_id, [])
+            self.chains[chain_id] = c.Chain(atoms, missing)
 
         self._chain_list = list(self.chains.values())
 

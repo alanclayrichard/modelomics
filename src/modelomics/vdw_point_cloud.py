@@ -9,7 +9,7 @@ from scipy.spatial import KDTree
 
 from .utils.atom_colors import atom_colors
 
-class vdwPointCloud:
+class VDWPointCloud:
     def __init__(self, atoms, N=92, probe_radius=1.4):
         """
         initialize a point cloud from a list of modelomics.atom objects

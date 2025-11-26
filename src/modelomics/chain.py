@@ -76,7 +76,7 @@ class Chain:
     
     def __getitem__(self, key):
         """
-        Access residues by:
+        access residues by:
         - tuple (name, number, insertion) or (name, number)
         - integer index
         """
@@ -92,8 +92,19 @@ class Chain:
         
     @property
     def sequence(self):
-        """Return full sequence including missing residues, ordered by residue number"""
+        """
+        return full sequence including missing residues, ordered by number
+        """
         # sort residues by number to get proper sequence order
-        sorted_residues = sorted(self.residues.items(), key=lambda x: x[0][1])  # Sort by residue number
-        return "".join(aa_3to1.get(res_info[0], "X") for res_info, res_obj in sorted_residues)
-
+        sorted_residues = sorted(self.residues.items(), 
+                                 key=lambda x: x[0][1])
+        return "".join(aa_3to1.get(res_info[0], "X") 
+                       for res_info, res_obj in sorted_residues)
+    
+    def write_pdb(self, filename):
+        ''' 
+        write the contents of this protein to a pdb file
+        '''
+        with open(filename, 'w') as f:
+            for atom in self.atoms:
+                f.write(atom.line)

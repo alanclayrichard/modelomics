@@ -26,7 +26,7 @@ class Atom:
         self.occupancy = float(line[54:60])
         self.temp_factor = float(line[60:66])
         self.element = line[76:78].strip()
-        self.radius = vdwRadii[self.element]
+        self.radius = vdwRadii[self.element.upper()]
         self.line = line
         
         # compute properties
