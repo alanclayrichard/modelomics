@@ -13,40 +13,28 @@
 ### Atom-Level Processing  
 - **Comprehensive atom properties**: Coordinates, van der Waals radii, element types, occupancy, B-factors
 - **Insertion code support**: Full support for PDB insertion codes in residue numbering
-- **Polarity classification**: Built-in methods to identify polar/nonpolar atoms
-- **Element validation**: Automatic element detection and van der Waals radius assignment
 
 ### Chain-Level Operations
-- **Automatic chain detection**: Efficient grouping of atoms by chain identifier
-- **Residue organization**: Smart grouping of atoms into residues by number, name, and insertion code
 - **Dictionary and list access**: Access residues by `("name", number, "insertion")` tuples or integer index
-- **Chain filtering**: Maintain chain integrity during structure manipulation
 
 ### Advanced Residue-Level Analysis
 - **Comprehensive atom organization**: Residues contain atoms as both dictionary (by name) and list (by index)
 - **Structural analysis methods**: Alpha carbon positioning, geometric calculations, coordinate extraction
 - **Interaction detection**: Covalent bond detection using atomic radii and distance criteria
 - **Hydrogen bond analysis**: Geometric hydrogen bond detection with donor-acceptor distance and angle constraints
-- **Hydrophobic contact detection**: Fast carbon-carbon contact analysis for hydrophobic interactions
-- **Missing residue handling**: Support for missing residues from REMARK 465 records with proper sequence reconstruction
-- **Flexible atom access**: Get atoms by name (`residue["CA"]`) or index (`residue[0]`)
 
 ### Protein Sequence Analysis and Embeddings
-- **Multi-format sequence extraction**: Extract amino acid sequences from PDB and CIF files with BioPython integration
-- **ESM-C language model embeddings**: Generate high-quality 960-dimensional sequence embeddings using Meta's ESM-C 300M model
+- **ESM-C language model embeddings**: Generate sequence embeddings from pretrained models
 - **Masked sequence analysis**: Create embeddings with specific residue positions masked for mutation effect studies
-- **Lazy model loading**: Efficient memory management with on-demand ESM-C model loading
-- **Sequence reconstruction**: Automatic sequence building from structure including missing residues
-- **Embedding integration**: Seamless integration of sequence embeddings into graph neural network node features
+- **Embedding integration**: Integration of sequence embeddings into graph neural network node features
 
 ### Advanced Graph Neural Network Representations
-- **PyTorch Geometric integration**: Native `torch_geometric.data.Data` objects for seamless GNN training
-- **Rich residue-level graphs**: 971-dimensional node features combining sequence embeddings, physicochemical properties, SASA, and normal mode analysis
+- **PyTorch Geometric integration**: Native `torch_geometric.data.Data` objects for GNN training
+- **Rich residue-level graphs**: Features combining sequence embeddings, physicochemical properties, SASA, and normal mode analysis
 - **Multi-scale edge features**: Distance, covalent bonds, hydrogen bonds, and hydrophobic contacts
 - **ESM-C sequence embeddings**: 960-dimensional protein language model representations
 - **Structural features**: SASA analysis (5D), normal mode fluctuations, physicochemical properties (5D)
-- **Efficient bond detection**: Fast algorithms for covalent bonding, hydrogen bonding, and hydrophobic contacts
-- **Vectorized graph construction**: Optimized distance calculations and edge building for large proteins
+- **Efficient bond detection**: Fast algorithms for covalent bonding, hydrogen bonding
 
 ### Molecular Surface Analysis and SASA Calculations
 - **Fibonacci sphere sampling**: Mathematically optimal point distribution on atomic surfaces (92 points per atom)
@@ -55,18 +43,7 @@
 - **Buried point removal**: KDTree-based neighbor search algorithms for efficient buried point identification
 - **Typed SASA analysis**: Surface area breakdown by polarity (polar/nonpolar/positive/negative/total)
 - **Residue-level SASA**: Aggregate surface area calculations at the residue level for binding site analysis
-- **Efficient algorithms**: Pre-computed unit vectors and vectorized operations for fast surface generation
 - **Visualization export**: Export point clouds in XYZ format with atomic coloring for molecular visualization
-
-### Structural Biology Utilities and Data
-- **Comprehensive atomic data**: Van der Waals radii database covering 100+ elements from authoritative references
-- **CPK color schemes**: Standard atomic color schemes for molecular visualization and rendering
-- **Amino acid classifications**: Complete polar/nonpolar/charged/aromatic residue classifications
-- **Atomic property databases**: Polarity, formal charges, and physicochemical properties for all standard atoms
-- **CHARMM force field integration**: Atom naming convention conversion between PDB and CHARMM formats
-- **Normal mode analysis**: ProDy integration for Gaussian Network Model calculations and flexibility analysis
-- **Memory optimization**: Efficient data structures and vectorized algorithms for large protein systems
-- **Categorical encoding**: Machine learning-ready encoding of molecular features for neural networks
 
 ## Installation
 
