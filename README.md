@@ -1,6 +1,6 @@
 # modelomics
 
-`modelomics` is a comprehensive Python package for structural biology and protein design, providing state-of-the-art computational tools for protein analysis, graph neural networks, molecular surface analysis, and machine learning applications. Built with PyTorch Geometric integration for modern deep learning on protein structures.
+`modelomics` is a Python package for structural biology and protein design — the way i like it.
 
 ## Current Features
 
