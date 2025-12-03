@@ -5,8 +5,8 @@ the residue class for various protein design tasks
 
 import math
 
-from . import atom as a
-from .vdw_point_cloud import VDWPointCloud
+# from . import atom as a
+# from .vdw_point_cloud import VDWPointCloud
 
 class Residue:
     def __init__(self, atoms, missing_info=None):
@@ -111,7 +111,10 @@ class Residue:
         return False
 
     
-    def hydrogen_bond(self, other_residue, ha_cutoff=2.5, min_dha_angle=120):
+    def hydrogen_bond(self, other_residue, 
+                      ha_cutoff=2.5, min_dha_angle=120, # thresholds with H 
+                      da_cutoff=4, min_daan_angle=90, # thresholds without H
+                      hydrogen_present=True, verbose=False):
         """
         determine if this residue has a hydrogen bond to another residue
         criteria: H...A distance < 3.0A, D-H...A angle > 120deg
@@ -121,7 +124,7 @@ class Residue:
         
         # simplified: any nitrogen or oxygen can be donor/acceptor
         def is_polar_atom(atom):
-            return (hasattr(atom, 'element') and atom.element in ['N', 'O']) or \
+            return (hasattr(atom, 'element') and atom.element in ['N', 'O']) or\
                    atom.name.startswith(('N', 'O'))
         
         def angle_between_vectors(v1, v2):
@@ -135,52 +138,104 @@ class Residue:
             cos_angle = max(-1, min(1, cos_angle))
             return math.degrees(math.acos(cos_angle))
         
-        # check both directions: self - other and other - self
-        for res1, res2 in [(self, other_residue), (other_residue, self)]:
-            for donor in res1._atom_list:
-                if not is_polar_atom(donor):
-                    continue
-                    
-                # find hydrogen bonded to donor
-                h_atom = None
-                for atom in res1._atom_list:
-                    if atom.element == 'H':
-                        h_dist = ((donor.x - atom.x)**2 + 
-                                 (donor.y - atom.y)**2 + 
-                                 (donor.z - atom.z)**2)**0.5
-                        if h_dist < 1.2:
-                            h_atom = atom
-                            break
-                
-                if not h_atom:
-                    continue
-                    
-                for acceptor in res2._atom_list:
-                    if not is_polar_atom(acceptor):
+        if hydrogen_present:
+            # if hydrogens are present then use them for the geometric criteria
+            # check both directions: self - other and other - self
+            for res1, res2 in [(self, other_residue), (other_residue, self)]:
+                for donor in res1._atom_list:
+                    if not is_polar_atom(donor):
                         continue
                         
-                    # check H...A distance
-                    ha_dist = ((h_atom.x - acceptor.x)**2 + 
-                              (h_atom.y - acceptor.y)**2 + 
-                              (h_atom.z - acceptor.z)**2)**0.5
-                                              
-                    if ha_dist > ha_cutoff:
+                    # find hydrogen bonded to donor
+                    h_atom = None
+                    for atom in res1._atom_list:
+                        if atom.element == 'H':
+                            h_dist = ((donor.x - atom.x)**2 + 
+                                    (donor.y - atom.y)**2 + 
+                                    (donor.z - atom.z)**2)**0.5
+                            if h_dist < 1.2:
+                                h_atom = atom
+                                break
+                    
+                    if not h_atom:
                         continue
                         
-                    # check D-H...A angle (angle at hydrogen atom)
-                    hd_vec = [donor.x - h_atom.x, 
-                             donor.y - h_atom.y, 
-                             donor.z - h_atom.z]
-                    ha_vec = [acceptor.x - h_atom.x, 
-                             acceptor.y - h_atom.y, 
-                             acceptor.z - h_atom.z]
-                             
-                    dha_angle = angle_between_vectors(hd_vec, ha_vec)
+                    for acceptor in res2._atom_list:
+                        if not is_polar_atom(acceptor):
+                            continue
+                            
+                        # check H...A distance
+                        ha_dist = ((h_atom.x - acceptor.x)**2 + 
+                                (h_atom.y - acceptor.y)**2 + 
+                                (h_atom.z - acceptor.z)**2)**0.5
+                                                
+                        if ha_dist > ha_cutoff:
+                            continue
+                            
+                        # check D-H...A angle (angle at hydrogen atom)
+                        hd_vec = [donor.x - h_atom.x, 
+                                donor.y - h_atom.y, 
+                                donor.z - h_atom.z]
+                        ha_vec = [acceptor.x - h_atom.x, 
+                                acceptor.y - h_atom.y, 
+                                acceptor.z - h_atom.z]
+                                
+                        dha_angle = angle_between_vectors(hd_vec, ha_vec)
+                        
+                        if dha_angle > min_dha_angle:
+                            if verbose:
+                                print(f"hbond found: {res1.name}{res1.number} "
+                                    f"{donor.name}-{h_atom.name}..."
+                                    f"{res2.name}{res2.number} {acceptor.name},"
+                                    f" ha_dist={ha_dist:.2f}, "
+                                    f"dha_angle={dha_angle:.1f}")
+                            return True
+        else:
+            # if there are no hydrogens, then definition must be based on the 
+            # donor, acceptor, and antecedent
+            
+            # check both directions: self - other and other - self
+            for res1, res2 in [(self, other_residue), (other_residue, self)]:
+                for donor in res1._atom_list:
+                    if not is_polar_atom(donor):
+                        continue
                     
-                    if dha_angle > min_dha_angle:
-                        # print(f"hbond found: {res1.name}{res1.number} "
-                        #       f"{donor.name}-{h_atom.name}..."
-                        #       f"{res2.name}{res2.number} {acceptor.name}, "
-                        #       f"ha_dist={ha_dist:.2f}, angle={dha_angle:.1f}")
-                        return True
+                    for acceptor in res2._atom_list:
+                        if not is_polar_atom(acceptor):
+                            continue
+                        
+                        # check D...A distance
+                        da_dist = ((donor.x - acceptor.x)**2 + 
+                                (donor.y - acceptor.y)**2 + 
+                                (donor.z - acceptor.z)**2)**0.5
+                                                
+                        if da_dist > da_cutoff:
+                            continue
+                        
+                        # find antecedent: another polar atom bonded to the donor
+                        for antecedent in res1._atom_list:
+                            if antecedent is donor or not is_polar_atom(antecedent):
+                                continue
+                            
+                            # check D-A...An angle
+                            aan_vec = [antecedent.x - acceptor.x, 
+                                    antecedent.y - acceptor.y, 
+                                    antecedent.z - acceptor.z]
+                            da_vec = [donor.x - acceptor.x, 
+                                    donor.y - acceptor.y, 
+                                    donor.z - acceptor.z]
+                                
+                            daan_angle = angle_between_vectors(aan_vec, da_vec)
+                            
+                            if daan_angle > min_daan_angle:
+                                if verbose:
+                                    print(f"hbond found (no H): "
+                                          f"{res1.name}{res1.number} "
+                                          f"{donor.name}..."
+                                          f"{res2.name}{res2.number} "
+                                          f"{acceptor.name},"
+                                          f" da_dist={da_dist:.2f}, "
+                                          f"daan_angle={daan_angle:.1f}")
+                                return True
+                            
         return False

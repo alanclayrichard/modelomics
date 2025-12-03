@@ -61,7 +61,12 @@ class Graph(Data):
             emb = embed_sequence(chain.sequence)
             if isinstance(emb, torch.Tensor):
                 emb = emb.to(torch.float32).detach().cpu().numpy()
-            if emb.ndim == 3: emb = emb.squeeze(0)
+            # handle both ESMC (3D: batch, seq+boundary, dim) and E1 (2D: seq, dim)
+            if emb.ndim == 3:
+                emb = emb.squeeze(0)  # remove batch dimension
+                # remove boundary tokens for ESMC (first and last)
+                if emb.shape[0] == len(chain.sequence) + 2:
+                    emb = emb[1:-1]
         except Exception as e:
             print(f"Embedding failed for {chain} with {e}")
             print(f"N residues: {len(chain)} "
@@ -123,7 +128,10 @@ class Graph(Data):
                 if dist <= cutoff:
                     # check for bonds
                     is_covalent = 1.0 if resi.covalent_bond(resj) else 0.0
-                    is_hbond = 1.0 if resi.hydrogen_bond(resj) else 0.0
+                    is_hbond = 1.0 if resi.hydrogen_bond(
+                        resj, 
+                        hydrogen_present=False
+                    ) else 0.0
                     edge_index.append([i, j])
                     edge_attr.append([dist, 
                                       is_covalent, 
