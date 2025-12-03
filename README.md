@@ -24,8 +24,10 @@
 - **Hydrogen bond analysis**: Geometric hydrogen bond detection with donor-acceptor distance and angle constraints
 
 ### Protein Sequence Analysis and Embeddings
-- **ESM-C language model embeddings**: Generate sequence embeddings from pretrained models
-- **Masked sequence analysis**: Create embeddings with specific residue positions masked for mutation effect studies
+- **Multiple embedding models**: Support for both ESM-C (300M) and E1 (150M/300M) protein language models
+- **ESM-C embeddings**: Generate 960-dimensional sequence embeddings from pretrained models
+- **E1 embeddings**: Alternative embedding model with flexible sizing (requires Python 3.12)
+- **Masked sequence analysis**: Create embeddings with specific residue positions masked for mutation effect studies (ESM-C)
 - **Embedding integration**: Integration of sequence embeddings into graph neural network node features
 
 ### Advanced Graph Neural Network Representations
@@ -49,11 +51,25 @@
 
 ### Prerequisites
 
-- Python 3.10 or higher
+- Python 3.10 or higher (Python 3.12 required for E1 embeddings)
 
 ### Install with pip
 
 ```bash
+pip install git+https://github.com/alanclayrichard/modelomics.git
+```
+
+### Using E1 Embeddings
+
+If you plan to use E1 embeddings, create a Python 3.12 virtual environment:
+
+```bash
+# Create Python 3.12 virtual environment
+python3.12 -m venv venv_e1
+source venv_e1/bin/activate  # On macOS/Linux
+# venv_e1\Scripts\activate  # On Windows
+
+# Install modelomics
 pip install git+https://github.com/alanclayrichard/modelomics.git
 ```
 
@@ -106,19 +122,23 @@ for chain_id, chain in pdb.chains.items():
 
 ### Sequence Analysis and Embeddings
 ```python
-from modelomics import sequences
+from modelomics import sequence_embeddings
 
 # Extract sequences from structures
-seq_cif = sequences.sequence_from_cif("protein.cif", chain='B')
-seq_pdb = sequences.sequence_from_pdb("protein.pdb", chain='A')
+seq_cif = sequence_embeddings.sequence_from_cif("protein.cif", chain='B')
+seq_pdb = sequence_embeddings.sequence_from_pdb("protein.pdb", chain='A')
 print("Sequence:", seq_pdb)
 
-# Generate ESM-C protein language model embeddings
-embedding = sequences.embed_sequence(seq_pdb)
-print("Embedding shape:", embedding.shape)  # [1, seq_len+2, hidden_dim]
+# Generate ESM-C protein language model embeddings (default)
+embedding_esmc = sequence_embeddings.embed_sequence(seq_pdb, model="esmc")
+print("ESM-C embedding shape:", embedding_esmc.shape)  # [1, seq_len+2, 960]
 
-# Create masked embeddings for mutation analysis
-masked_embedding = sequences.embed_sequence_with_mask(seq_pdb, mask_positions=[5, 10])
+# Generate E1 protein language model embeddings (requires Python 3.12)
+embedding_e1 = sequence_embeddings.embed_sequence(seq_pdb, model="e1", model_size="150m")
+print("E1 embedding shape:", embedding_e1.shape)  # [seq_len, hidden_dim]
+
+# Create masked embeddings for mutation analysis (ESM-C only)
+masked_embedding = sequence_embeddings.embed_sequence(seq_pdb, model="esmc", mask_positions=[5, 10])
 print("Masked embedding shape:", masked_embedding.shape)
 ```
 
