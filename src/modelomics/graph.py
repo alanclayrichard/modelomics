@@ -9,11 +9,10 @@ from torch_geometric.data import Data
 import numpy as np
 import warnings
 warnings.filterwarnings("ignore", category=SyntaxWarning)
-from prody import parsePDB, GNM, calcSqFlucts, confProDy
+from prody import parsePDB, GNM, calcSqFlucts
 
 # local imports
 from .vdw_point_cloud import VDWPointCloud
-from .sequence_embeddings import embed_sequence
 from .utils.aa_names import *
 
 class Graph(Data):
@@ -55,23 +54,6 @@ class Graph(Data):
         # remove tmp pdb
         if os.path.exists("./tmp.pdb"):
             os.remove("./tmp.pdb")
-        
-        # sequence embeddings  
-        try:
-            emb = embed_sequence(chain.sequence)
-            if isinstance(emb, torch.Tensor):
-                emb = emb.to(torch.float32).detach().cpu().numpy()
-            # handle both ESMC (3D: batch, seq+boundary, dim) and E1 (2D: seq, dim)
-            if emb.ndim == 3:
-                emb = emb.squeeze(0)  # remove batch dimension
-                # remove boundary tokens for ESMC (first and last)
-                if emb.shape[0] == len(chain.sequence) + 2:
-                    emb = emb[1:-1]
-        except Exception as e:
-            print(f"Embedding failed for {chain} with {e}")
-            print(f"N residues: {len(chain)} "
-                  f"N aa_seq: {len(chain.sequence)}")
-            emb = np.zeros((len(chain.sequence), 960))
 
         coords = []            
         for i, res in enumerate(chain._residue_list):
@@ -81,9 +63,6 @@ class Graph(Data):
             # get the position of this node (CA xyz, or average if no CA)
             ca = res.pos
             coords.append(ca)
-            
-            # embeddings 960 dimensions
-            res_feats.extend(emb[i])
             
             # physicochemical properties (binary) 5 dimensions
             res_feats.extend([
