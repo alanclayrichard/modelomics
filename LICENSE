@@ -1,0 +1,140 @@
+# Modelomics License
+
+## MIT License for Modelomics Code
+
+Copyright (c) 2025 Clay Richard
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+## Third-Party Protein Language Model Licenses
+
+**IMPORTANT**: Modelomics provides interfaces to third-party protein language models.
+**You are solely responsible** for obtaining, reviewing, and complying with all licenses
+and terms of use for these models. The modelomics author(s) assume **NO LIABILITY** for
+your use of these models or any violations of their terms.
+
+### ESM-C Model (300M)
+
+When using ESM-C embeddings via `embed_sequence(seq, model="esmc")`, you are subject to:
+
+**License**: EvolutionaryScale Cambrian Open License Agreement  
+**URL**: https://www.evolutionaryscale.ai/policies/cambrian-open-license-agreement
+
+**Required Attribution**:
+- Display "Built with ESM" on any API, model, workflow, website, UI, or documentation
+- Identify any drug/molecular target as "Generated with ESM" in regulatory filings
+- Include "ESM" at the beginning of derivative model titles
+- Comply with ESM Acceptable Use Policy
+
+**Restrictions**: Review the full license for commercial use restrictions and acceptable use policies.
+
+### E1 Model (150M/300M/600M)
+
+When using E1 embeddings via `embed_sequence(seq, model="e1")`, you are subject to:
+
+**License**: Profluent-E1 Clickthrough License Agreement  
+**Attribution Guidelines**: https://github.com/Profluent-AI/E1/blob/main/ATTRIBUTION  
+**Full License**: https://github.com/Profluent-AI/E1/blob/main/LICENSE
+
+**Required Attribution**:
+- Display prominent attribution to "Profluent-E1" in all distributions and publications
+- Identify any drug/molecular target as "Built with Profluent-E1" in regulatory filings
+- For commercial use: attribution in main body of publications and title pages
+- Attribution must be legible, properly sized, and not obscured
+
+**Restrictions**: Review the full license for limitations and commercial use terms.
+
+---
+
+## User Acknowledgments and Responsibilities
+
+**BY USING MODELOMICS, YOU EXPLICITLY ACKNOWLEDGE AND AGREE THAT**:
+
+1. **You are solely responsible** for understanding and complying with all licenses for
+   protein language models accessed through modelomics, including ESM-C, E1, and any
+   future models.
+
+2. **You will obtain and review** the current, complete license terms for any model you
+   use before generating embeddings or logits.
+
+3. **You will provide proper attribution** as required by each model's license when using
+   embeddings, publishing results, or creating derivative works.
+
+4. **Different models have different terms** including restrictions on commercial use,
+   acceptable use policies, and export controls. You are responsible for understanding
+   which restrictions apply to your use case.
+
+5. **The modelomics author(s) make no representations** about the accuracy, completeness,
+   or current status of the license information provided herein. License terms may change.
+
+6. **You will not hold the modelomics author(s) liable** for any violations of upstream
+   licenses, export controls, acceptable use policies, or other restrictions arising from
+   your use of protein language models through this software.
+
+7. **You assume all legal, financial, and regulatory risks** associated with your use of
+   modelomics and any third-party models it interfaces with.
+
+---
+
+## Disclaimers and Limitation of Liability
+
+**NO WARRANTY**: MODELOMICS IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+PARTICULAR PURPOSE, NONINFRINGEMENT, OR COMPLIANCE WITH THIRD-PARTY LICENSES.
+
+**NO LIABILITY**: IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE,
+ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE, INCLUDING BUT NOT LIMITED TO:
+- Violations of third-party licenses or terms of service
+- Regulatory non-compliance or legal penalties
+- Loss of data, profits, or business opportunities
+- Inaccurate embeddings or scientific results
+- Export control violations
+- Any direct, indirect, incidental, special, exemplary, or consequential damages
+
+**SEVERABILITY**: If any provision of this license is held invalid or unenforceable, that
+provision shall be limited or eliminated to the minimum extent necessary, and the remaining
+provisions shall remain in full force and effect.
+
+---
+
+## Summary for Quick Reference
+
+| Component | License | Attribution Required |
+|-----------|---------|---------------------|
+| Modelomics code | MIT | No |
+| ESM-C embeddings | Cambrian Open License | Yes - "Built with ESM" |
+| E1 embeddings | Profluent-E1 License | Yes - "Built with Profluent-E1" |
+
+**Before using any embedding model, you MUST**:
+1. Read the full license at the URLs provided above
+2. Understand attribution requirements for your use case
+3. Verify you comply with any commercial use restrictions
+4. Accept all risks and liability for your use
+
+**Questions about model licenses?** Contact the respective model providers:
+- ESM-C: EvolutionaryScale (https://www.evolutionaryscale.ai)
+- E1: Profluent Bio (https://www.profluent.bio)
+
+---
+
+*This license file last updated: December 2025*
