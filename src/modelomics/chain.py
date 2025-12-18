@@ -18,6 +18,9 @@ class Chain:
         self.populate()
         self._residue_list = list(self.residues.values())
 
+    def __len__(self):
+        return len(self.residues)
+
     def populate(self):
         """
         efficiently group atoms into residues and add missing residues

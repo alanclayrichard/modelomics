@@ -6,6 +6,7 @@ create a graph representation of a protein via the modelomics.pdb object
 import os
 import torch
 from torch_geometric.data import Data
+from torch_geometric.nn import radius_graph
 import numpy as np
 import warnings
 warnings.filterwarnings("ignore", category=SyntaxWarning)
@@ -14,21 +15,21 @@ from prody import parsePDB, GNM, calcSqFlucts
 # local imports
 from .vdw_point_cloud import VDWPointCloud
 from .utils.aa_names import *
+from .utils.topology import hydrophobicity
 
 class Graph(Data):
-    def __init__(self, chain, cutoff=15.0):
-        # build nodes, edges, positions, and features
-        x, pos, edge_index, edge_attr = self._construct_graph(chain, cutoff)
+    def __init__(self, chain=None, cutoff=15.0):
+        if chain is None:
+            super().__init__()
+            return
 
-        # initialize the parent class (torch geometric graph object)
+        x, pos, edge_index, edge_attr = self._construct_graph(chain, cutoff)
         super().__init__(
-            x=torch.tensor(x, dtype=torch.float), 
-            edge_index=torch.tensor(edge_index, dtype=torch.long), 
-            edge_attr=torch.tensor(edge_attr, dtype=torch.float), 
-            pos=torch.tensor(pos, dtype=torch.float)
+            x=torch.tensor(x, dtype=torch.float),
+            edge_index=torch.tensor(edge_index, dtype=torch.long),
+            edge_attr=torch.tensor(edge_attr, dtype=torch.float),
+            pos=torch.tensor(pos, dtype=torch.float),
         )
-        
-        # protein objects 
         self.chain = chain
 
     def _construct_graph(self, chain, cutoff):
@@ -41,6 +42,9 @@ class Graph(Data):
         construct the node features and get the pos tensor
         '''
         node_features = []
+
+        # sequence length
+        L = len(chain._residue_list)
         
         # sasa precalculation
         pc = VDWPointCloud(chain.atoms, N=92, probe_radius=1.4)
@@ -63,6 +67,10 @@ class Graph(Data):
             # get the position of this node (CA xyz, or average if no CA)
             ca = res.pos
             coords.append(ca)
+
+            # the one hot encoded aa
+            aa_idx = aa_list.index(res_1)
+            res_feats.extend(AA_ONEHOT[aa_idx])
             
             # physicochemical properties (binary) 5 dimensions
             res_feats.extend([
@@ -70,8 +78,15 @@ class Graph(Data):
                 1 if res_1 in nonpolar_aa else 0,
                 1 if res_1 in positive_aa else 0,
                 1 if res_1 in negative_aa else 0,
-                1 if res_1 in aromatic_aa else 0
+                1 if res_1 in aromatic_aa else 0,
+                1 if res_1 in aliphatic_aa else 0
             ])
+
+            # the internal, relative index normalized by length
+            res_feats.append(i/L)
+
+            # the hydrophobicity of the aa 
+            res_feats.append(hydrophobicity[res_1])
             
             # sasa features 5 dimensions
             sasa = pc.residue_sasa_by_type([res])
@@ -91,32 +106,35 @@ class Graph(Data):
         return np.array(node_features), np.array(coords)
     
     def _edges(self, chain, cutoff):
-        # calculate pairwise distances
-        edge_index = []
-        edge_attr = []
-        
-        for i, resi in enumerate(chain._residue_list):
-            for j, resj in enumerate(chain._residue_list):
-                if i == j: continue
-                pos_i = resi.pos
-                pos_j = resj.pos
-                coord_i = np.array([pos_i[0], pos_i[1], pos_i[2]])
-                coord_j = np.array([pos_j[0], pos_j[1], pos_j[2]])
-                dist = np.linalg.norm(coord_i - coord_j)
-                                    
-                if dist <= cutoff:
-                    # check for bonds
-                    is_covalent = 1.0 if resi.covalent_bond(resj) else 0.0
-                    is_hbond = 1.0 if resi.hydrogen_bond(
-                        resj, 
-                        hydrogen_present=False
-                    ) else 0.0
-                    edge_index.append([i, j])
-                    edge_attr.append([dist, 
-                                      is_covalent, 
-                                      is_hbond]) 
-                
-        return np.array(edge_index).T, np.array(edge_attr)
+        pos = torch.tensor(
+            np.array([res.pos for res in chain._residue_list]),
+            dtype=torch.float
+        )
+
+        edge_index = radius_graph(
+            pos,
+            r=cutoff,
+            loop=False
+        )
+
+        # Edge attributes (scaled distances)
+        src, dst = edge_index
+        coord_diff = pos[src] - pos[dst]
+        dist = torch.norm(coord_diff, dim=1) / cutoff
+
+        # Precompute bond maps once
+        covalent = torch.zeros(len(dist))
+        hbond = torch.zeros(len(dist))
+
+        for k, (i, j) in enumerate(zip(src.tolist(), dst.tolist())):
+            resi = chain._residue_list[i]
+            resj = chain._residue_list[j]
+            covalent[k] = float(resi.covalent_bond(resj))
+            hbond[k] = float(resi.hydrogen_bond(resj, hydrogen_present=False))
+
+        edge_attr = torch.stack([dist, covalent, hbond], dim=1)
+        return edge_index.numpy(), edge_attr.numpy()
+
     
     def _get_nma_values(self, pdb_path, chain_id):
         '''

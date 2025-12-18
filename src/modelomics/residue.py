@@ -4,6 +4,7 @@ the residue class for various protein design tasks
 '''
 
 import math
+import numpy as np
 
 # from . import atom as a
 # from .vdw_point_cloud import VDWPointCloud
@@ -62,27 +63,41 @@ class Residue:
     def __len__(self):
         return len(self.atoms)
         
+    # @property
+    # def pos(self):
+    #     """
+    #     get xyz coordinates of alpha carbon or average of all atoms
+    #     """
+    #     if self.is_missing:
+    #         return [0.0, 0.0, 0.0]
+            
+    #     if 'CA' in self.atoms:
+    #         # return alpha carbon position
+    #         ca = self.atoms['CA']
+    #         return [ca.x, ca.y, ca.z]
+    #     elif self.atoms:
+    #         # return average position of all atoms
+    #         x_sum = sum(atom.x for atom in self._atom_list)
+    #         y_sum = sum(atom.y for atom in self._atom_list)
+    #         z_sum = sum(atom.z for atom in self._atom_list)
+    #         n_atoms = len(self._atom_list)
+    #         return [x_sum/n_atoms, y_sum/n_atoms, z_sum/n_atoms]
+    #     else:
+    #         return [0.0, 0.0, 0.0]
+
     @property
     def pos(self):
-        """
-        get xyz coordinates of alpha carbon or average of all atoms
-        """
         if self.is_missing:
-            return [0.0, 0.0, 0.0]
-            
+            return np.zeros(3)
         if 'CA' in self.atoms:
-            # return alpha carbon position
             ca = self.atoms['CA']
-            return [ca.x, ca.y, ca.z]
+            return np.array([ca.x, ca.y, ca.z])
         elif self.atoms:
-            # return average position of all atoms
-            x_sum = sum(atom.x for atom in self._atom_list)
-            y_sum = sum(atom.y for atom in self._atom_list)
-            z_sum = sum(atom.z for atom in self._atom_list)
-            n_atoms = len(self._atom_list)
-            return [x_sum/n_atoms, y_sum/n_atoms, z_sum/n_atoms]
+            coords = np.array([[a.x, a.y, a.z] for a in self._atom_list])
+            return coords.mean(axis=0)
         else:
-            return [0.0, 0.0, 0.0]
+            return np.zeros(3)
+
     
     def covalent_bond(self, other_residue, tolerance=0.2):
         """

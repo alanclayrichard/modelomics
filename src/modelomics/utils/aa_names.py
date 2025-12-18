@@ -3,7 +3,11 @@
 amino acid names for 1->3 and 3->1 conversion
 '''
 
-aa_list = "ARNDCEQGHILKMFPSTWYV"
+import numpy as np
+
+aa_string = "ARNDCEQGHILKMFPSTWYVX"
+aa_list = list(aa_string)
+AA_ONEHOT = np.eye(len(aa_list))
 
 aa_3to1 = {
     "ALA": "A",

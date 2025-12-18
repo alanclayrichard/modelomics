@@ -5,7 +5,9 @@ various sequence functionalities for use in protein tasks
 
 # lazy imports for speed
 _esmc_client = None 
+_esm3_client = None
 _e1_models = {}
+
 
 def _get_esmc_client():
     '''get the ESMC pretrained weights'''
@@ -14,6 +16,13 @@ def _get_esmc_client():
     if _esmc_client is None:
         _esmc_client = ESMC.from_pretrained("esmc_300m").to("cpu")
     return _esmc_client
+
+def _get_esm3_model(model_size="esm3-sm-open-v1"):
+    from esm.models.esm3 import ESM3
+    global _esm3_client
+    if _esm3_client is None:
+        _esm3_client = ESM3.from_pretrained(model_size).to("cpu")
+    return _esm3_client
 
 def _get_e1_model(model_size="150m"):
     '''get the E1 pretrained weights'''
@@ -129,5 +138,25 @@ def embed_sequence(seq, model="esmc", model_size="150m", mask_positions=None):
         )
         return logits_output.embeddings
     
+    elif model.lower() == "esm3":
+        from esm.sdk.api import ESMProtein, LogitsConfig
+        client = _get_esm3_model()
+        protein = ESMProtein(sequence=seq)
+        protein_tensor = client.encode(protein)
+        
+        if mask_positions is not None:
+            sequence_tokens = protein_tensor.sequence.clone()
+            mask_token_id = client.tokenizer.mask_token_id
+            for pos in mask_positions:
+                if pos < 0 or pos >= len(sequence_tokens):
+                    raise IndexError(f"mask position {pos} is out of sequence bounds")
+                sequence_tokens[pos] = mask_token_id
+            protein_tensor.sequence = sequence_tokens
+        
+        logits_output = client.logits(
+            protein_tensor, LogitsConfig(sequence=True, return_embeddings=True)
+        )
+        return logits_output.embeddings
+    
     else:
-        raise ValueError(f"model must be 'e1' or 'esmc', got '{model}'")
+        raise ValueError(f"model must be 'e1', 'esmc', or 'esm3' got '{model}'")
