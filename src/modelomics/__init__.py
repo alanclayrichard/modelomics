@@ -6,7 +6,7 @@ modelomics: A Python package for structural biology and protein design
 modelomics: A Python package for structural biology and protein design
 """
 
-from .pdb import PDB
+from .PDB import PDB
 from .atom import Atom
 from .chain import Chain
 from .residue import Residue
