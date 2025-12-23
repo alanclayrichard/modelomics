@@ -156,3 +156,4 @@ class Graph(Data):
         except Exception as e:
             print(f"NMA failed for {pdb_path}_{chain_id}: {e}")
             return {}
+ 

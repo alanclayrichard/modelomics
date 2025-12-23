@@ -12,10 +12,33 @@ from .utils.topology import (vdwRadii,
 )
 
 class Atom:
-    def __init__(self, line):
+    def __init__(self, line, atom_site_dict = None):
+        self.parsed_line = line
+        self.atom_site_dict = atom_site_dict
+        self.from_cif = atom_site_dict is not None
+        
+        if atom_site_dict != None:
+            self._parse_cif_line(line, atom_site_dict)
+        else:
+            self._parse_pdb_line(line)
+        
+        # compute properties
+        self.polar = self._is_polar()
+        self.charge = self._get_charge()
+        
+        # compute properties
+        self.polar = self._is_polar()
+        self.charge = self._get_charge()
+
+    def __str__(self):
+        return self.to_string()
+    
+    def _parse_pdb_line(self, line):
+        """parse standard PDB ATOM/HETATM line"""
         self.type = line[:6].strip()
         self.number = int(line[6:11])
         self.name = line[12:16].strip()
+        self.altloc = line[16]
         self.residue = line[17:20].strip()
         self.chain = line[21]
         self.resnum = int(line[22:26])
@@ -26,16 +49,143 @@ class Atom:
         self.occupancy = float(line[54:60])
         self.temp_factor = float(line[60:66])
         self.element = line[76:78].strip()
-        self.radius = vdwRadii[self.element.upper()]
-        self.line = line
-        
-        # compute properties
-        self.polar = self._is_polar()
-        self.charge = self._get_charge()
+        self.radius = vdwRadii.get(self.element.upper(), 0)
 
-    def __str__(self):
-        return self.line
-    
+    def _parse_cif_line(self, line, atom_site_dict):
+        '''parse cif atom lines given column mapping'''
+        tokens = line.split()
+        try:
+            self.type = tokens[atom_site_dict["group_PDB"]]
+            self.number = int(tokens[atom_site_dict["id"]])
+            self.name = tokens[atom_site_dict["label_atom_id"]]
+            alt_idx = atom_site_dict.get("label_alt_id")
+            if alt_idx is not None:
+                val = tokens[alt_idx]
+                self.altloc = " " if val in (".", "?") else val
+            else:
+                self.altloc = " "
+            self.element = tokens[atom_site_dict["type_symbol"]]
+            self.residue = tokens[atom_site_dict["auth_comp_id"]]
+            self.chain = tokens[atom_site_dict["auth_asym_id"]]
+            label_idx = atom_site_dict.get("auth_seq_id")
+            resnum = -1
+            if label_idx is not None:
+                val = tokens[label_idx]
+                if val not in (".", "?"):
+                    resnum = int(val)
+            self.resnum = resnum
+            ins_idx = atom_site_dict.get("pdbx_PDB_ins_code")
+            if ins_idx is not None:
+                ins = tokens[ins_idx]
+                self.insertion = "" if ins in ("?", ".") else ins
+            else:
+                self.insertion = ""
+
+            self.x = float(tokens[atom_site_dict["Cartn_x"]])
+            self.y = float(tokens[atom_site_dict["Cartn_y"]])
+            self.z = float(tokens[atom_site_dict["Cartn_z"]])
+
+            occ_idx = atom_site_dict.get("occupancy")
+            self.occupancy = float(tokens[occ_idx]) if occ_idx is not None else 1.0
+
+            b_idx = atom_site_dict.get("B_iso_or_equiv")
+            self.temp_factor = float(tokens[b_idx]) if b_idx is not None else 0.0
+
+        except (IndexError, ValueError) as e:
+            raise ValueError(f"Cannot parse CIF line: {line}") from e
+
+        self.radius = vdwRadii.get(self.element.upper(), 0)
+
+    def to_string(self, format='pdb'):
+        if format == 'cif':
+            if self.from_cif:
+                tokens = self.parsed_line.split()
+                d = self.atom_site_dict
+
+                tokens[d["group_PDB"]] = self.type
+                tokens[d["id"]] = str(self.number)
+                tokens[d["label_atom_id"]] = self.name
+
+                alt_idx = d.get("label_alt_id")
+                if alt_idx is not None:
+                    tokens[alt_idx] = self.altloc if self.altloc != " " else "."
+
+                tokens[d["type_symbol"]] = self.element
+                tokens[d["auth_comp_id"]] = self.residue
+                tokens[d["auth_asym_id"]] = self.chain
+                tokens[d["auth_seq_id"]] = str(self.resnum) if self.resnum != -1 else "?"
+                tokens[d["pdbx_PDB_ins_code"]] = self.insertion if self.insertion else "?"
+
+                tokens[d["Cartn_x"]] = f"{self.x:.3f}"
+                tokens[d["Cartn_y"]] = f"{self.y:.3f}"
+                tokens[d["Cartn_z"]] = f"{self.z:.3f}"
+                tokens[d["occupancy"]] = f"{self.occupancy:.2f}"
+                tokens[d["B_iso_or_equiv"]] = f"{self.temp_factor:.2f}"
+
+                return " ".join(tokens) + "\n"
+
+            else:
+                self.atom_site_dict = {k: i for i, k in enumerate([
+                    "group_PDB",
+                    "id",
+                    "type_symbol",
+                    "label_atom_id",
+                    "label_alt_id",
+                    "label_comp_id",
+                    "label_asym_id",
+                    "label_seq_id",
+                    "auth_comp_id",
+                    "auth_asym_id",
+                    "auth_seq_id",
+                    "pdbx_PDB_ins_code",
+                    "Cartn_x",
+                    "Cartn_y",
+                    "Cartn_z",
+                    "occupancy",
+                    "B_iso_or_equiv",
+                ])}
+                return (
+                    f"{self.type} "
+                    f"{self.number} "
+                    f"{self.element} "
+                    f"{self.name} "
+                    f"{self.altloc if self.altloc != ' ' else '.'} "
+                    f"{self.residue} "        # label_comp_id
+                    f"{self.chain} "          # label_asym_id
+                    f"{self.resnum} "         # label_seq_id
+                    f"{self.residue} "        # auth_comp_id
+                    f"{self.chain} "          # auth_asym_id
+                    f"{self.resnum} "         # auth_seq_id
+                    f"{self.insertion if self.insertion else '?'} "
+                    f"{self.x:.3f} "
+                    f"{self.y:.3f} "
+                    f"{self.z:.3f} "
+                    f"{self.occupancy:.2f} "
+                    f"{self.temp_factor:.2f}\n"
+                )
+
+
+        elif format == 'pdb':
+            return (
+                f"{self.type:<6}"          # 1-6
+                f"{self.number:>5} "       # 7-11 + 12
+                f"{self.name:<4}"          # 13-16
+                f"{self.altloc:1}"         # 17 
+                f"{self.residue:<4}"       # 18-21 
+                f"{self.chain:1}"          # 22
+                f"{self.resnum:>4}"        # 23-26
+                f"{self.insertion:<1}   "  # 27 + 28-30
+                f"{self.x:>8.3f}"          # 31-38
+                f"{self.y:>8.3f}"          # 39-46
+                f"{self.z:>8.3f}"          # 47-54
+                f"{self.occupancy:>6.2f}"  # 55-60
+                f"{self.temp_factor:>6.2f}"# 61-66
+                f"          "              # 67-76
+                f"{self.element:>2}\n"     # 77-78
+            )
+        else:
+            raise ValueError(f"format type {filetype} not known")
+
     def _is_polar(self):
         return self.element.upper() in _POLAR_ELEMENTS
     
@@ -64,6 +214,11 @@ class Atom:
             
         return 0  # neutral
     
+    def move(self, x, y, z):
+        self.x = x
+        self.y = y
+        self.z = z
+
     def rename_to_charmm(self, is_last_residue=False):
         """
         rename atom names to follow CHARMM conventions
@@ -154,3 +309,18 @@ class Atom:
             self.name = f"{digit}{rest}"
         
         return original_name != self.name  # return True if name was changed
+    
+    def covalent_bond(self, other_atom, tolerance=0.4):
+        """
+        check for bonding using a standard buffer (tolerance) in Angstroms.
+        standard covalent bond distance is roughly sum of radii.
+        """
+        max_dist = self.radius + other_atom.radius + tolerance
+        min_dist = 0.4 
+        
+        dx = self.x - other_atom.x
+        dy = self.y - other_atom.y
+        dz = self.z - other_atom.z
+        dist_sq = dx**2 + dy**2 + dz**2
+
+        return (min_dist**2) <= dist_sq <= (max_dist**2)

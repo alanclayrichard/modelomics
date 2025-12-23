@@ -1,14 +1,14 @@
-# created by clay 07/01/25
+# created by clay 12/19/25
 '''
-the PDB class for use with protein tools
+the CIF class for use with protein tools
 '''
 from . import atom as a
 from . import chain as c
 
-class PDB:
+class CIF:
     def __init__(self, filename):
         '''
-        intialize a PDB object from a file
+        initialize a CIF object from a mmCIF file
         '''
         self.filename = filename
         self.file_data = ""
@@ -21,9 +21,9 @@ class PDB:
         
     def __str__(self):
         '''
-        a descriptive string of the pdb object
+        a descriptive string of the CIF object
         '''
-        return f"PDB object from {self.filename} with {len(self.chains)} chains"
+        return f"CIF object from {self.filename} with {len(self.chains)} chains"
     
     def __getitem__(self, key):
         '''
@@ -34,7 +34,7 @@ class PDB:
         elif isinstance(key, int):
             return self._chain_list[key]
         else:
-            raise TypeError(f"Invalid PDB key type: {type(key)}")
+            raise TypeError(f"Invalid CIF key type: {type(key)}")
         
     def __len__(self):
         '''
@@ -44,37 +44,59 @@ class PDB:
 
     def parse_lines(self, filename):
         '''
-        store the atom objects and other data created from lines in the pdb file
+        store the atom objects and other data created from lines in the CIF file
         '''
         with open(filename) as f:
             lines = f.readlines()
         
-        # Parse missing residues - add this block
-        for line in lines:
-            if line.startswith("REMARK 465") and len(line.split()) >= 5:
-                parts = line.split()
-                if parts[2] not in ["MISSING", "THE", "FOLLOWING"]:
-                    try:
-                        res_name = parts[2]
-                        chain_id = parts[3]
-                        res_num = int(parts[4])
-                        if chain_id not in self.missing_residues:
-                            self.missing_residues[chain_id] = []
-                        self.missing_residues[chain_id].append((res_name, 
-                                                                res_num))
-                    except (ValueError, IndexError):
-                        continue
+        # Pre-filter atom lines
+        atom_lines = []
+        atom_site_idxs = []
+        missing_res_idxs = []
+        missing_labels = []
+        loop_lines = []
+        for i, line in enumerate(lines): 
+            if line.startswith(("ATOM", "HETATM")):
+                atom_lines.append(line)
+            elif line.startswith(("_atom_site.")):
+                atom_site_idxs.append(line.replace(" ", ""))
+                self.file_data += line
+            elif line.startswith("_pdbx_unobs_or_zero_occ_residues."):
+                missing_res_idxs.append(line.replace(" ", ""))
+                missing_labels.append(i)
+            elif "loop_" in line:
+                loop_lines.append(i)
+            else:
+                self.file_data += line
+
+        if len(missing_labels) > 0:
+            missing_lines = lines[
+                missing_labels[-1]+1:
+                min([x for x in loop_lines if x > max(missing_labels)])
+            ]
+            missing_lines = [line for line in missing_lines if '#' not in line]
+
+            missing_res_idxs_dict = {}
+            for i, label in enumerate(missing_res_idxs):
+                missing_res_idxs_dict[
+                    label.replace("_pdbx_unobs_or_zero_occ_residues.", "")[:-1]
+                ] = i
             
-        # pre-filter lines and create atoms in one pass
-        atom_lines = [line for line in lines if line.startswith(("ATOM", 
-                                                                 "HETATM"))]
-        self.atoms = [a.Atom(line) for line in atom_lines]
-        
-        # store non-atom lines
-        self.file_data = ''.join(line for line in lines if not line.startswith((
-            "ATOM", "HETATM"
-        )))
-        
+            for line in missing_lines:
+                values = line.split()
+                chain_id = values[missing_res_idxs_dict["auth_asym_id"]]
+                if chain_id not in self.missing_residues:
+                            self.missing_residues[chain_id] = []
+                self.missing_residues[chain_id].append(
+                    (values[missing_res_idxs_dict["auth_comp_id"]],
+                    values[missing_res_idxs_dict["auth_seq_id"]])
+                )
+
+        atom_site_idx_dict = {}
+        for i, label in enumerate(atom_site_idxs):
+            atom_site_idx_dict[label.replace("_atom_site.","")[:-1]] = i
+        self.atoms = [a.Atom(line, atom_site_idx_dict) for line in atom_lines]
+                
         # build chains efficiently
         self._build_chains()
 
@@ -102,7 +124,6 @@ class PDB:
         '''
         remove waters from the list of atoms
         '''
-        # filter atoms and rebuild chains in one operation
         self.atoms = [atom for atom in self.atoms if atom.residue != "HOH"]
         self._build_chains()
 
@@ -110,7 +131,6 @@ class PDB:
         '''
         remove hetatms from the list of atoms
         '''
-        # filter atoms and rebuild chains in one operation  
         self.atoms = [atom for atom in self.atoms if atom.type == "ATOM"]
         self._build_chains()
 
@@ -151,12 +171,7 @@ class PDB:
             if filename.endswith("cif"):
                 if self[0][0][0].atom_site_dict is not None:
                     f.write("loop_\n")
-                    for label in self[0][0][0].atom_site_dict:
-                        f.write("_atom_site."+label+'\n')
-                else:
-                    self[0][0][0].to_string(format="cif")
-                    f.write("loop_\n")
-                    for label in self[0][0][0].atom_site_dict:
+                    for label in self[0][0].atom_site_dict:
                         f.write("_atom_site."+label+'\n')
                 f.write(self.to_string(format='cif'))
             else: 

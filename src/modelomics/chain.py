@@ -104,10 +104,21 @@ class Chain:
         return "".join(aa_3to1.get(res_info[0], "X") 
                        for res_info, res_obj in sorted_residues)
     
-    def write_pdb(self, filename):
+    def to_string(self, format='pdb'):
+        return ''.join(residue.to_string(format) for residue in self)
+    
+    def write(self, filename):
         ''' 
-        write the contents of this protein to a pdb file
+        write the contents of this protein to a file
         '''
         with open(filename, 'w') as f:
-            for atom in self.atoms:
-                f.write(atom.line)
+            if filename.endswith("cif"):
+                if self[0][0].atom_site_dict is not None:
+                    f.write("loop_\n")
+                    for label in self[0][0].atom_site_dict:
+                        f.write("_atom_site."+label+'\n')
+                for residue in self:
+                    f.write(residue.to_string(format='cif'))
+            else: 
+                for residue in self:
+                    f.write(residue.to_string(format='pdb'))
