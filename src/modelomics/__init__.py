@@ -5,7 +5,10 @@ modelomics: A Python package for structural biology and protein design
 __author__ = "A. Clay Richard"
 __email__ = "alanclayrichard@gmail.com"
 
-# Lazy imports to speed up package loading
+
+# modelomics/__init__.py
+import importlib
+
 def __getattr__(name):
     if name == "PDB":
         from . import pdb
@@ -26,8 +29,9 @@ def __getattr__(name):
         from . import vdw_point_cloud
         return vdw_point_cloud.VDWPointCloud
     elif name == "sequence_embeddings":
-        from . import sequence_embeddings
-        return sequence_embeddings
+        module = importlib.import_module(".sequence_embeddings", __name__)
+        globals()[name] = module  # cache
+        return module
     elif name == "Graph":
         from . import graph
         return graph.Graph
