@@ -33,8 +33,11 @@ def __getattr__(name):
         globals()[name] = module  # cache
         return module
     elif name == "Graph":
-        from . import graph
-        return graph.Graph
+        from . import feature_graph
+        return feature_graph.Graph
+    elif name == "AtomGraph":
+        from . import atom_graph
+        return atom_graph.AtomGraph
     else:
         raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
 
@@ -47,6 +50,7 @@ __all__ = [
     "VDWPointCloud", 
     "sequence_embeddings",
     "Graph",
+    "AtomGraph",
     "__version__",
     "__author__",
     "__email__"

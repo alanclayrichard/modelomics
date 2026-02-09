@@ -35,7 +35,7 @@ your use of these models or any violations of their terms.
 
 When using ESM-C embeddings via `embed_sequence(seq, model="esmc")`, you are subject to:
 
-**License**: EvolutionaryScale Cambrian Open License Agreement  
+**License**: EvolutionaryScale Cambrian Open License Agreement
 **URL**: https://www.evolutionaryscale.ai/policies/cambrian-open-license-agreement
 
 **Required Attribution**:
@@ -45,6 +45,24 @@ When using ESM-C embeddings via `embed_sequence(seq, model="esmc")`, you are sub
 - Comply with ESM Acceptable Use Policy
 
 **Restrictions**: Review the full license for commercial use restrictions and acceptable use policies.
+
+### ESM3 Model (esm3-sm-open-v1)
+
+When using ESM3 embeddings via `embed_sequence(seq, model="esm3")`, you are subject to:
+
+**License**: EvolutionaryScale Cambrian Non-Commercial License Agreement
+**URL**: https://www.evolutionaryscale.ai/policies/cambrian-non-commercial-license-agreement
+**Source**: https://github.com/evolutionaryscale/esm/blob/main/LICENSE.md
+
+**Required Attribution**:
+- Display "Built with ESM" on any API, model, workflow, website, UI, or documentation
+- Include "ESM" at the beginning of derivative model titles
+- Release derivative models and methods under the same non-commercial license
+
+**Restrictions**: ESM3 is licensed for **non-commercial use only**. Commercial activities, monetary
+compensation, and providing outputs as a service are prohibited. Derivative works must be released
+under the same Cambrian Non-Commercial License. This differs from the ESM-C Cambrian Open License.
+Review the full license for complete terms.
 
 ### E1 Model (150M/300M/600M)
 
@@ -62,6 +80,19 @@ When using E1 embeddings via `embed_sequence(seq, model="e1")`, you are subject 
 
 **Restrictions**: Review the full license for limitations and commercial use terms.
 
+### ProtT5-XL Model (UniRef50)
+
+When using ProtT5 embeddings via `embed_sequence(seq, model="prott5")`, you are subject to:
+
+**License**: MIT License
+**Repository**: https://github.com/agemagician/ProtTrans
+**Full License**: https://github.com/agemagician/ProtTrans/blob/master/LICENSE
+
+**Required Citation**:
+- Elnaggar, A. et al. "ProtTrans: Toward Understanding the Language of Life Through Self-Supervised Learning." *IEEE Transactions on Pattern Analysis and Machine Intelligence*, 2021. DOI: https://doi.org/10.1109/TPAMI.2021.3095381
+
+**Restrictions**: MIT-licensed — permissive use including commercial applications. See the full license for terms.
+
 ---
 
 ## User Acknowledgments and Responsibilities
@@ -69,7 +100,7 @@ When using E1 embeddings via `embed_sequence(seq, model="e1")`, you are subject 
 **BY USING MODELOMICS, YOU EXPLICITLY ACKNOWLEDGE AND AGREE THAT**:
 
 1. **You are solely responsible** for understanding and complying with all licenses for
-   protein language models accessed through modelomics, including ESM-C, E1, and any
+   protein language models accessed through modelomics, including ESM-C, ESM3, E1, ProtT5, and any
    future models.
 
 2. **You will obtain and review** the current, complete license terms for any model you
@@ -123,7 +154,9 @@ provisions shall remain in full force and effect.
 |-----------|---------|---------------------|
 | Modelomics code | MIT | No |
 | ESM-C embeddings | Cambrian Open License | Yes - "Built with ESM" |
+| ESM3 embeddings | Cambrian Non-Commercial License | Yes - "Built with ESM" |
 | E1 embeddings | Profluent-E1 License | Yes - "Built with Profluent-E1" |
+| ProtT5 embeddings | MIT | Yes - cite Elnaggar et al. 2021 |
 
 **Before using any embedding model, you MUST**:
 1. Read the full license at the URLs provided above
@@ -132,9 +165,10 @@ provisions shall remain in full force and effect.
 4. Accept all risks and liability for your use
 
 **Questions about model licenses?** Contact the respective model providers:
-- ESM-C: EvolutionaryScale (https://www.evolutionaryscale.ai)
+- ESM-C / ESM3: EvolutionaryScale (https://www.evolutionaryscale.ai)
 - E1: Profluent Bio (https://www.profluent.bio)
+- ProtT5: Rostlab (https://github.com/agemagician/ProtTrans)
 
 ---
 
-*This license file last updated: December 2025*
+*This license file last updated: February 2026*

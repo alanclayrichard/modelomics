@@ -7,6 +7,8 @@ various sequence functionalities for use in protein tasks
 _esmc_client = None 
 _esm3_client = None
 _e1_models = {}
+_prott5_model = None
+_prott5_tokenizer = None
 
 
 def _get_esmc_client():
@@ -32,6 +34,29 @@ def _get_e1_model(model_size="150m"):
         _e1_models[model_size] = E1ForMaskedLM.from_pretrained(f"Profluent-Bio/E1-{model_size}").to("cpu")
         _e1_models[model_size].eval()
     return _e1_models[model_size]
+
+def _get_prott5_model():
+    '''get the ProtT5 pretrained weights'''
+    try:
+        from transformers import T5Tokenizer, T5EncoderModel
+    except (ImportError, OSError) as e:
+        raise ImportError(
+            f"Failed to import transformers library for ProtT5: {e}. "
+            "Install with: pip install transformers sentencepiece protobuf"
+        )
+    
+    import torch
+    global _prott5_model, _prott5_tokenizer
+    if _prott5_model is None:
+        device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+        _prott5_tokenizer = T5Tokenizer.from_pretrained('Rostlab/prot_t5_xl_half_uniref50-enc', do_lower_case=False)
+        _prott5_model = T5EncoderModel.from_pretrained("Rostlab/prot_t5_xl_half_uniref50-enc")
+        _prott5_model = _prott5_model.to(device)
+        # only GPUs support half-precision; use full-precision on CPU
+        if device == torch.device("cpu"):
+            _prott5_model = _prott5_model.to(torch.float32)
+        _prott5_model.eval()
+    return _prott5_model, _prott5_tokenizer
 
 def sequence_from_cif(file_path, chain='A'):
     '''
@@ -83,13 +108,13 @@ def sequence_from_pdb(file_path, chain='A'):
 
 def embed_sequence(seq, model="esmc", model_size="150m", mask_positions=None):
     '''
-    embed a string sequence using E1 or ESMC model
+    embed a string sequence using E1, ESMC, ESM3, or ProtT5 model
     
     args:
         seq: protein sequence string
-        model: "e1" or "esmc" (default: "esmc")
+        model: "e1", "esmc", "esm3", or "prott5" (default: "esmc")
         model_size: for E1 only - "150m" or "300m" (default: "150m")
-        mask_positions: list of positions to mask (ESMC only)
+        mask_positions: list of positions to mask (ESMC/ESM3 only)
     
     returns:
         embeddings tensor (L, E) for residues only
@@ -158,5 +183,34 @@ def embed_sequence(seq, model="esmc", model_size="150m", mask_positions=None):
         )
         return logits_output.embeddings
     
+    elif model.lower() == "prott5":
+        import re
+        prott5_model, prott5_tokenizer = _get_prott5_model()
+        device = next(prott5_model.parameters()).device
+        
+        # replace all rare/ambiguous amino acids by X
+        seq_cleaned = seq.replace('U','X').replace('Z','X').replace('O','X').replace('B','X')
+        seq_len = len(seq_cleaned)
+        
+        # introduce white-space between all amino acids
+        processed_seq = " ".join(list(seq_cleaned))
+        
+        # tokenize sequence
+        token_encoding = prott5_tokenizer([processed_seq], add_special_tokens=True, padding="longest")
+        input_ids = torch.tensor(token_encoding['input_ids']).to(device)
+        attention_mask = torch.tensor(token_encoding['attention_mask']).to(device)
+        
+        # generate embeddings
+        try:
+            with torch.no_grad():
+                embedding_repr = prott5_model(input_ids=input_ids, attention_mask=attention_mask)
+        except RuntimeError as e:
+            raise RuntimeError(f"RuntimeError during embedding for sequence (L={seq_len}): {str(e)}")
+        
+        # extract residue embeddings: slice off special tokens, keep only residue embeddings
+        # embedding shape is (batch_size, seq_len + special_tokens, embedding_dim)
+        emb = embedding_repr.last_hidden_state[0, :seq_len]
+        return emb.detach().cpu()
+    
     else:
-        raise ValueError(f"model must be 'e1', 'esmc', or 'esm3' got '{model}'")
+        raise ValueError(f"model must be 'e1', 'esmc', 'esm3', or 'prott5' got '{model}'")

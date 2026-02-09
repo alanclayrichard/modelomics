@@ -6,8 +6,8 @@ setup.py
 src/modelomics/__init__.py
 src/modelomics/atom.py
 src/modelomics/chain.py
+src/modelomics/cif.py
 src/modelomics/graph.py
-src/modelomics/networkx_graph.py
 src/modelomics/pdb.py
 src/modelomics/residue.py
 src/modelomics/sequence_embeddings.py
