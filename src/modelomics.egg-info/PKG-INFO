@@ -78,10 +78,11 @@ Dynamic: license-file
 - **Hydrogen bond analysis**: Geometric hydrogen bond detection with donor-acceptor distance and angle constraints
 
 ### Protein Sequence Analysis and Embeddings
-- **Multiple embedding models**: Support for both ESM-C (300M) and E1 (150M/300M) protein language models
+- **Multiple embedding models**: Support for ESM-C (300M), E1 (150M/300M), ESM3, and ProtT5-XL protein language models
 - **ESM-C embeddings**: Generate 960-dimensional sequence embeddings from pretrained models
 - **E1 embeddings**: Alternative embedding model with flexible sizing (requires Python 3.12)
-- **Masked sequence analysis**: Create embeddings with specific residue positions masked for mutation effect studies (ESM-C)
+- **ProtT5-XL embeddings**: Per-residue embeddings from the ProtT5-XL-UniRef50 encoder (1024D)
+- **Masked sequence analysis**: Create embeddings with specific residue positions masked for mutation effect studies (ESM-C/ESM3)
 - **Embedding integration**: Integration of sequence embeddings into graph neural network node features
 
 ### Advanced Graph Neural Network Representations
@@ -115,7 +116,7 @@ pip install git+https://github.com/alanclayrichard/modelomics.git
 
 ### Using E1 Embeddings
 
-If you plan to use E1 embeddings, create a Python 3.12 virtual environment:
+E1 requires Python 3.12. Create a separate virtual environment:
 
 ```bash
 # Create Python 3.12 virtual environment
@@ -125,6 +126,20 @@ source venv_e1/bin/activate  # On macOS/Linux
 
 # Install modelomics
 pip install git+https://github.com/alanclayrichard/modelomics.git
+```
+
+### Using ProtT5 Embeddings
+
+ProtT5 depends on `transformers`, `sentencepiece`, and `protobuf`, which can conflict with the ESM and E1 dependency versions. Create a separate virtual environment:
+
+```bash
+python3 -m venv venv_prott5
+source venv_prott5/bin/activate  # On macOS/Linux
+# venv_prott5\Scripts\activate  # On Windows
+
+# Install modelomics + ProtT5 dependencies
+pip install git+https://github.com/alanclayrichard/modelomics.git
+pip install transformers sentencepiece protobuf
 ```
 
 ## Example Usage
@@ -191,7 +206,11 @@ print("ESM-C embedding shape:", embedding_esmc.shape)  # [1, seq_len+2, 960]
 embedding_e1 = sequence_embeddings.embed_sequence(seq_pdb, model="e1", model_size="150m")
 print("E1 embedding shape:", embedding_e1.shape)  # [seq_len, hidden_dim]
 
-# Create masked embeddings for mutation analysis (ESM-C only)
+# Generate ProtT5-XL embeddings (requires separate venv)
+embedding_prott5 = sequence_embeddings.embed_sequence(seq_pdb, model="prott5")
+print("ProtT5 embedding shape:", embedding_prott5.shape)  # [seq_len, 1024]
+
+# Create masked embeddings for mutation analysis (ESM-C/ESM3 only)
 masked_embedding = sequence_embeddings.embed_sequence(seq_pdb, model="esmc", mask_positions=[5, 10])
 print("Masked embedding shape:", masked_embedding.shape)
 ```
