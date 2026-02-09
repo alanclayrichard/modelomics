@@ -78,4 +78,9 @@ class AtomGraph(Data):
         # edge_attr: [distance, ux, uy, uz]
         edge_attr = torch.cat([dist, unit_vec], dim=1)
 
+        # sort edges by distance
+        order = dist.squeeze().argsort()
+        edge_index = edge_index[:, order]
+        edge_attr = edge_attr[order]
+
         return edge_index.numpy(), edge_attr.numpy()
