@@ -11,8 +11,9 @@ import numpy as np
 # backbone + sidechain + terminal atoms
 charmm_atom_names = [
     # backbone
-    "C", "CA", "CB",
+    "C", "CA", "N", "O",
     # sidechain carbons
+    "CB", 
     "CD", "CD1", "CD2",
     "CE", "CE1", "CE2", "CE3",
     "CG", "CG1", "CG2",
@@ -41,13 +42,9 @@ charmm_atom_names = [
     "HT1", "HT2", "HT3",
     # zeta hydrogens
     "HZ", "HZ1", "HZ2", "HZ3",
-    # backbone nitrogen
-    "N",
     # sidechain nitrogens
     "ND1", "ND2", "NE", "NE1", "NE2",
     "NH1", "NH2", "NZ",
-    # backbone oxygen
-    "O",
     # sidechain oxygens
     "OD1", "OD2", "OE1", "OE2",
     "OG", "OG1", "OH",
