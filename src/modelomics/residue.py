@@ -4,7 +4,6 @@ the residue class for various protein design tasks
 '''
 
 import math
-import numpy as np
 
 from .bonds.bonds import *
 
@@ -64,6 +63,7 @@ class Residue:
 
     @property
     def pos(self):
+        import numpy as np
         if self.is_missing:
             return np.zeros(3)
         if 'CA' in self.atoms:
