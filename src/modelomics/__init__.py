@@ -38,6 +38,9 @@ def __getattr__(name):
     elif name == "AtomGraph":
         from . import atom_graph
         return atom_graph.AtomGraph
+    elif name == "Trajectory":
+        from . import trajectory
+        return trajectory.Trajectory
     else:
         raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
 
@@ -51,6 +54,7 @@ __all__ = [
     "sequence_embeddings",
     "Graph",
     "AtomGraph",
+    "Trajectory",
     "__version__",
     "__author__",
     "__email__"
